@@ -179,14 +179,26 @@ const FinanceModern = () => {
         };
       }
 
+      // Déterminer le statut final basé sur la logique métier
+      let statutFinal;
+      if (justification?.status === 'neutralized') {
+        statutFinal = 'neutralized';
+      } else if (analysis.isSuspect) {
+        statutFinal = 'suspect';
+      } else if (displayDiagnostic.urgence === 'high' || tarifHoraireReel < 75) {
+        statutFinal = 'attention';
+      } else if (displayDiagnostic.urgence === 'medium' || tarifHoraireReel < 90) {
+        statutFinal = 'surveillance';
+      } else {
+        statutFinal = 'sain';
+      }
+
       return {
         ...client,
         analysis,
         justification,
         diagnostic: displayDiagnostic,
-        statut: justification?.status === 'neutralized' ? 'neutralized' : 
-                analysis.isSuspect ? 'suspect' : 
-                tarifHoraireReel < 85 ? 'attention' : 'bon'
+        statut: statutFinal
       };
     });
   }, [analysesFinancieres]);
@@ -203,8 +215,9 @@ const FinanceModern = () => {
       const matchStatut = selectedFilters.statut === 'tous' || 
                          (selectedFilters.statut === 'suspects' && client.statut === 'suspect') ||
                          (selectedFilters.statut === 'attention' && client.statut === 'attention') ||
+                         (selectedFilters.statut === 'surveillance' && client.statut === 'surveillance') ||
                          (selectedFilters.statut === 'neutralises' && client.statut === 'neutralized') ||
-                         (selectedFilters.statut === 'sains' && client.statut === 'bon');
+                         (selectedFilters.statut === 'sains' && client.statut === 'sain');
       
       const matchAffichage = selectedFilters.affichage === 'tous' ||
                             (selectedFilters.affichage === 'suspects_seulement' && client.statut === 'suspect') ||
@@ -892,10 +905,22 @@ const FinanceModern = () => {
                           className={`${selectedFilters.statut === 'attention' ? 'bg-orange-500 hover:bg-orange-600' : 'hover:bg-orange-50'} transition-all duration-200`}
                           onClick={() => setSelectedFilters(prev => ({...prev, statut: prev.statut === 'attention' ? 'tous' : 'attention'}))}
                         >
-                          <Users className="w-4 h-4 mr-2" />
-                          À surveiller
+                          <AlertTriangle className="w-4 h-4 mr-2" />
+                          Attention
                           <span className="ml-2 text-xs bg-white/20 px-2 py-1 rounded-full">
                             {clientsAnalyzed.filter(c => c.statut === 'attention' && !c.justification).length}
+                          </span>
+                        </Button>
+                        <Button 
+                          variant={selectedFilters.statut === 'surveillance' ? 'default' : 'outline'}
+                          size="sm"
+                          className={`${selectedFilters.statut === 'surveillance' ? 'bg-blue-500 hover:bg-blue-600' : 'hover:bg-blue-50'} transition-all duration-200`}
+                          onClick={() => setSelectedFilters(prev => ({...prev, statut: prev.statut === 'surveillance' ? 'tous' : 'surveillance'}))}
+                        >
+                          <Eye className="w-4 h-4 mr-2" />
+                          Surveillance
+                          <span className="ml-2 text-xs bg-white/20 px-2 py-1 rounded-full">
+                            {clientsAnalyzed.filter(c => c.statut === 'surveillance' && !c.justification).length}
                           </span>
                         </Button>
                         <Button 
@@ -919,7 +944,7 @@ const FinanceModern = () => {
                           <CheckCircle className="w-4 h-4 mr-2" />
                           Sains
                           <span className="ml-2 text-xs bg-white/20 px-2 py-1 rounded-full">
-                            {overviewStats.counts.sains}
+                            {clientsAnalyzed.filter(c => c.statut === 'sain').length}
                           </span>
                         </Button>
                       </div>
@@ -1087,145 +1112,186 @@ const FinanceModern = () => {
                   </div>
                 </div>
 
-                {/* Grille des clients avec diagnostics colorés au milieu - LAYOUT AÉRÉ */}
-                <div className="grid gap-8 mb-8 grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                  {clientsPaginated.map((client, index) => (
-                    <Card
-                      key={client.id}
-                      className="group relative overflow-hidden rounded-3xl bg-white border-0 shadow-lg hover:shadow-2xl hover:scale-[1.02] transition-all duration-500 cursor-pointer min-h-[520px] w-full"
-                      onClick={() => {
-                        setSelectedClient(client.id);
-                        setShowClientDetail(true);
-                      }}
-                    >
-                      <div className={`absolute top-0 left-0 w-full h-1 ${
-                        client.statut === 'suspect' ? 'bg-gradient-to-r from-red-400 to-pink-400' :
-                        client.statut === 'attention' ? 'bg-gradient-to-r from-orange-400 to-yellow-400' :
-                        client.justification?.status === 'neutralized' ? 'bg-gradient-to-r from-yellow-400 to-amber-400' :
-                        'bg-gradient-to-r from-green-400 to-emerald-400'
-                      }`} />
-                      
-                      <CardContent className="p-10 h-full flex flex-col justify-between">
-                        <div className="flex items-start justify-between mb-6">
-                          <div className="flex-1">
-                            <h3 className="font-bold text-2xl text-gray-900 mb-2 truncate">
-                              {client.nom}
-                            </h3>
-                            <p className="text-base font-medium text-gray-700">{client.gestionnaire}</p>
-                          </div>
-                          <Badge variant="outline" className={
-                            client.statut === 'suspect' ? 'border-red-200 text-red-700 bg-red-50' :
-                            client.statut === 'attention' ? 'border-orange-200 text-orange-700 bg-orange-50' :
-                            client.justification?.status === 'neutralized' ? 'border-yellow-200 text-yellow-700 bg-yellow-50' :
-                            'border-green-200 text-green-700 bg-green-50'
-                          }>
-                            {client.statut === 'suspect' ? 'Suspect' :
-                             client.statut === 'attention' ? 'À surveiller' :
-                             client.justification?.status === 'neutralized' ? 'Neutralisé' : 'Sain'}
-                          </Badge>
-                        </div>
+                {/* Grille des clients avec design Web 3.0 moderne */}
+                <div className="grid gap-6 mb-8 grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                  {clientsPaginated.map((client, index) => {
+                    // Définir les couleurs et styles selon le statut
+                    const getStatusConfig = (statut: string) => {
+                      switch (statut) {
+                        case 'suspect':
+                          return {
+                            gradient: 'from-red-500/20 via-pink-500/10 to-red-400/20',
+                            border: 'border-red-200/50',
+                            glow: 'shadow-red-500/20',
+                            label: 'Suspect',
+                            labelColor: 'bg-red-100 text-red-700 border-red-200',
+                            accentColor: 'red'
+                          };
+                        case 'attention':
+                          return {
+                            gradient: 'from-orange-500/20 via-amber-500/10 to-orange-400/20',
+                            border: 'border-orange-200/50',
+                            glow: 'shadow-orange-500/20',
+                            label: 'Attention',
+                            labelColor: 'bg-orange-100 text-orange-700 border-orange-200',
+                            accentColor: 'orange'
+                          };
+                        case 'surveillance':
+                          return {
+                            gradient: 'from-blue-500/20 via-cyan-500/10 to-blue-400/20',
+                            border: 'border-blue-200/50',
+                            glow: 'shadow-blue-500/20',
+                            label: 'Surveillance',
+                            labelColor: 'bg-blue-100 text-blue-700 border-blue-200',
+                            accentColor: 'blue'
+                          };
+                        case 'neutralized':
+                          return {
+                            gradient: 'from-yellow-500/20 via-amber-500/10 to-yellow-400/20',
+                            border: 'border-yellow-200/50',
+                            glow: 'shadow-yellow-500/20',
+                            label: 'Neutralisé',
+                            labelColor: 'bg-yellow-100 text-yellow-700 border-yellow-200',
+                            accentColor: 'yellow'
+                          };
+                        default:
+                          return {
+                            gradient: 'from-emerald-500/20 via-green-500/10 to-emerald-400/20',
+                            border: 'border-emerald-200/50',
+                            glow: 'shadow-emerald-500/20',
+                            label: 'Sain',
+                            labelColor: 'bg-emerald-100 text-emerald-700 border-emerald-200',
+                            accentColor: 'emerald'
+                          };
+                      }
+                    };
 
-                        {/* Diagnostic au milieu avec couleurs - PROPORTIONS ÉQUILIBRÉES */}
-                        <div className={`p-6 rounded-2xl mb-6 text-center min-h-[140px] flex flex-col justify-center ${
-                          client.diagnostic?.urgence === 'high' ? 'bg-gradient-to-br from-red-50 to-red-100 border-2 border-red-200' :
-                          client.diagnostic?.urgence === 'medium' ? 'bg-gradient-to-br from-yellow-50 to-yellow-100 border-2 border-yellow-200' :
-                          client.diagnostic?.urgence === 'low' ? 'bg-gradient-to-br from-blue-50 to-blue-100 border-2 border-blue-200' :
-                          'bg-gradient-to-br from-green-50 to-green-100 border-2 border-green-200'
-                        }`}>
-                          <div className="flex items-center justify-center space-x-2 mb-3">
-                            <div className={`p-2 rounded-full shadow-md ${
-                              client.diagnostic?.urgence === 'high' ? 'bg-red-100' :
-                              client.diagnostic?.urgence === 'medium' ? 'bg-yellow-100' :
-                              client.diagnostic?.urgence === 'low' ? 'bg-blue-100' :
-                              'bg-green-100'
-                            }`}>
-                              {getDiagnosticIcon(client.diagnostic?.type || 'equilibre')}
-                            </div>
-                          </div>
-                          <div className={`font-semibold text-lg mb-2 ${
-                            client.diagnostic?.urgence === 'high' ? 'text-red-700' :
-                            client.diagnostic?.urgence === 'medium' ? 'text-yellow-700' :
-                            client.diagnostic?.urgence === 'low' ? 'text-blue-700' :
-                            'text-green-700'
-                          }`}>
-                            {client.diagnostic?.type === 'dette_prestation' ? 'Dette Prestation' :
-                             client.diagnostic?.type === 'sous_facturation' ? 'Sous-Facturation' :
-                             client.diagnostic?.type === 'rentabilite_faible' ? 'Rentabilité Faible' :
-                             client.diagnostic?.type === 'facturation_insuffisante' ? 'Facturation Insuffisante' :
-                             client.diagnostic?.type === 'surveillance' ? 'À Surveiller' :
-                             'Équilibre Sain'}
-                          </div>
-                          <p className="text-xs text-gray-600 leading-relaxed px-2">{client.diagnostic?.alerte || '✅ Équilibre financier satisfaisant'}</p>
-                        </div>
+                    const statusConfig = getStatusConfig(client.statut);
 
-                        {/* Métriques clés - SECTION PRINCIPALE */}
-                        <div className="grid grid-cols-3 gap-4 py-4">
-                          <div className="text-center p-5 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl border border-blue-200">
-                            <div className="text-2xl font-bold text-blue-900 mb-2">
-                              {client.realiseADate.pourcentageCA.toFixed(0)}%
+                    return (
+                      <Card
+                        key={client.id}
+                        className={`group relative overflow-hidden backdrop-blur-xl bg-gradient-to-br ${statusConfig.gradient} border ${statusConfig.border} shadow-lg hover:shadow-xl ${statusConfig.glow} hover:scale-[1.02] transition-all duration-700 cursor-pointer min-h-[480px] w-full hover:border-white/30`}
+                        onClick={() => {
+                          setSelectedClient(client.id);
+                          setShowClientDetail(true);
+                        }}
+                      >
+                        {/* Accent bar top avec animation */}
+                        <div className={`absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-${statusConfig.accentColor}-400 to-${statusConfig.accentColor}-600 opacity-80`} />
+                        
+                        {/* Élément décoratif Web 3.0 */}
+                        <div className="absolute top-4 right-4 w-16 h-16 bg-white/5 rounded-full blur-xl group-hover:bg-white/10 transition-all duration-500" />
+                        <div className="absolute bottom-4 left-4 w-12 h-12 bg-white/5 rounded-full blur-lg group-hover:bg-white/10 transition-all duration-500" />
+                        
+                        <CardContent className="p-6 h-full flex flex-col justify-between relative z-10">
+                          {/* Header avec nom et statut */}
+                          <div className="flex items-start justify-between mb-4">
+                            <div className="flex-1">
+                              <h3 className="font-bold text-xl text-gray-900 mb-1 truncate group-hover:text-gray-800 transition-colors">
+                                {client.nom}
+                              </h3>
+                              <p className="text-sm font-medium text-gray-600">{client.gestionnaire}</p>
                             </div>
-                            <div className="text-sm font-medium text-blue-700">CA Réalisé</div>
+                            <Badge variant="outline" className={`${statusConfig.labelColor} font-medium px-3 py-1 text-xs rounded-full`}>
+                              {statusConfig.label}
+                            </Badge>
                           </div>
-                          <div className="text-center p-5 bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl border border-green-200">
-                            <div className="text-2xl font-bold text-green-900 mb-2">
-                              {(client.realiseADate.heures > 0 ? client.realiseADate.chiffreAffaires / client.realiseADate.heures : 0).toFixed(0)}€/h
-                            </div>
-                            <div className="text-sm font-medium text-green-700">Rentabilité</div>
-                          </div>
-                          <div className="text-center p-5 bg-gradient-to-br from-purple-50 to-violet-50 rounded-xl border border-purple-200">
-                            <div className="text-2xl font-bold text-purple-900 mb-2">
-                              {(client.realiseADate.chiffreAffaires / 1000).toFixed(0)}K€
-                            </div>
-                            <div className="text-sm font-medium text-purple-700">Chiffre d'Affaires</div>
-                          </div>
-                        </div>
 
-                        {/* Actions */}
-                        <div className="mt-6 pt-6 border-t border-gray-100">
-                          <div className="flex items-center justify-between">
-                            <span className="text-sm font-medium text-gray-600">
-                              {client.typeFacturation}
-                            </span>
-                            <div className="flex space-x-2">
-                              {client.justification?.status === 'neutralized' ? (
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  className="text-xs"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleReactivateSuspicion(client);
-                                  }}
-                                >
-                                  Réactiver
-                                </Button>
-                              ) : client.statut === 'suspect' && (
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  className="text-xs"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    setJustificationDialog({open: true, client});
-                                  }}
-                                >
-                                  Neutraliser
-                                </Button>
-                              )}
+                          {/* Diagnostic central avec design futuriste */}
+                          <div className={`relative p-4 rounded-2xl mb-4 text-center min-h-[120px] flex flex-col justify-center backdrop-blur-sm bg-white/40 border border-white/30 group-hover:bg-white/50 transition-all duration-500`}>
+                            {/* Élément décoratif */}
+                            <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent rounded-2xl" />
+                            
+                            <div className="relative z-10">
+                              <div className="flex items-center justify-center mb-2">
+                                <div className={`p-2 rounded-xl bg-white/60 backdrop-blur-sm shadow-sm`}>
+                                  {getDiagnosticIcon(client.diagnostic?.type || 'equilibre')}
+                                </div>
+                              </div>
+                              <div className={`font-semibold text-sm mb-1 text-gray-800`}>
+                                {client.diagnostic?.type === 'dette_prestation' ? 'Dette Prestation' :
+                                 client.diagnostic?.type === 'sous_facturation' ? 'Sous-Facturation' :
+                                 client.diagnostic?.type === 'rentabilite_faible' ? 'Rentabilité Faible' :
+                                 client.diagnostic?.type === 'facturation_insuffisante' ? 'Facturation Insuffisante' :
+                                 client.diagnostic?.type === 'surveillance' ? 'À Surveiller' :
+                                 'Équilibre Sain'}
+                              </div>
+                              <p className="text-xs text-gray-600 leading-relaxed px-1">
+                                {client.diagnostic?.alerte || '✅ Équilibre financier satisfaisant'}
+                              </p>
                             </div>
                           </div>
-                          
-                          {/* Indicateur "Voir plus" */}
-                          <div className="mt-4 flex items-center justify-center">
-                            <div className="flex items-center space-x-2 text-blue-600 hover:text-blue-700 transition-colors">
-                              <span className="text-sm font-medium">Voir plus d'infos</span>
-                              <ChevronRight className="w-4 h-4" />
+
+                          {/* Métriques avec design glassmorphism */}
+                          <div className="grid grid-cols-3 gap-3 mb-4">
+                            <div className="text-center p-3 bg-white/30 backdrop-blur-sm rounded-xl border border-white/20 hover:bg-white/40 transition-all duration-300">
+                              <div className="text-lg font-bold text-blue-900 mb-1">
+                                {client.realiseADate.pourcentageCA.toFixed(0)}%
+                              </div>
+                              <div className="text-xs font-medium text-blue-700">CA Réalisé</div>
+                            </div>
+                            <div className="text-center p-3 bg-white/30 backdrop-blur-sm rounded-xl border border-white/20 hover:bg-white/40 transition-all duration-300">
+                              <div className="text-lg font-bold text-green-900 mb-1">
+                                {(client.realiseADate.heures > 0 ? client.realiseADate.chiffreAffaires / client.realiseADate.heures : 0).toFixed(0)}€/h
+                              </div>
+                              <div className="text-xs font-medium text-green-700">Rentabilité</div>
+                            </div>
+                            <div className="text-center p-3 bg-white/30 backdrop-blur-sm rounded-xl border border-white/20 hover:bg-white/40 transition-all duration-300">
+                              <div className="text-lg font-bold text-purple-900 mb-1">
+                                {(client.realiseADate.chiffreAffaires / 1000).toFixed(0)}K€
+                              </div>
+                              <div className="text-xs font-medium text-purple-700">CA</div>
                             </div>
                           </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
+
+                          {/* Footer avec actions */}
+                          <div className="pt-3 border-t border-white/20">
+                            <div className="flex items-center justify-between mb-3">
+                              <span className="text-xs font-medium text-gray-600 bg-white/30 px-2 py-1 rounded-full">
+                                {client.typeFacturation}
+                              </span>
+                              <div className="flex space-x-1">
+                                {client.justification?.status === 'neutralized' ? (
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="text-xs h-7 px-2 bg-white/40 hover:bg-white/60 border-white/30"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleReactivateSuspicion(client);
+                                    }}
+                                  >
+                                    Réactiver
+                                  </Button>
+                                ) : client.statut === 'suspect' && (
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="text-xs h-7 px-2 bg-white/40 hover:bg-white/60 border-white/30"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setJustificationDialog({open: true, client});
+                                    }}
+                                  >
+                                    Neutraliser
+                                  </Button>
+                                )}
+                              </div>
+                            </div>
+                            
+                            {/* Indicateur interactif */}
+                            <div className="flex items-center justify-center">
+                              <div className="flex items-center space-x-2 text-gray-700 group-hover:text-gray-900 transition-colors">
+                                <span className="text-xs font-medium">Analyser en détail</span>
+                                <ChevronRight className="w-3 h-3 group-hover:translate-x-1 transition-transform" />
+                              </div>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    );
+                  })}
                 </div>
 
                 {/* Pagination */}
