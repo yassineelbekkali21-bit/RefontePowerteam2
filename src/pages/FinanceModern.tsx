@@ -154,28 +154,28 @@ const FinanceModern = () => {
           type: 'dette_prestation' as const,
           alerte: `⚠️ Client payé à ${client.realiseADate.pourcentageCA.toFixed(1)}% mais seulement ${client.realiseADate.pourcentageHeures.toFixed(1)}% presté`,
           actionRecommandee: 'Analyser le planning et rattraper les heures',
-          urgence: 'high' as const
+          urgence: 'medium' as const // À surveiller
         };
       } else if (ecartFacturationPrestation < -20) {
         displayDiagnostic = {
           type: 'sous_facturation' as const,
           alerte: `📉 Sous-facturation de ${Math.abs(ecartFacturationPrestation).toFixed(1)}%`,
           actionRecommandee: 'Réviser les tarifs ou augmenter la facturation',
-          urgence: 'medium' as const
+          urgence: 'high' as const // Suspects
         };
       } else if (tarifHoraireReel < seuilRentabilite) {
         displayDiagnostic = {
           type: 'rentabilite_faible' as const,
           alerte: `💰 Rentabilité ${tarifHoraireReel.toFixed(0)}€/h < ${seuilRentabilite}€/h`,
           actionRecommandee: 'Optimiser l\'efficacité ou revoir les tarifs',
-          urgence: 'high' as const
+          urgence: 'high' as const // Suspects
         };
       } else {
         displayDiagnostic = {
           type: 'equilibre' as const,
           alerte: '✅ Équilibre financier satisfaisant',
           actionRecommandee: 'Maintenir la performance actuelle',
-          urgence: 'none' as const
+          urgence: 'none' as const // Sains
         };
       }
 
@@ -183,11 +183,14 @@ const FinanceModern = () => {
       let statutFinal;
       if (justification?.status === 'neutralized') {
         statutFinal = 'neutralized';
-      } else if (analysis.isSuspect) {
+      } else if (analysis.isSuspect || displayDiagnostic.urgence === 'high') {
+        // Suspects: Rentabilité faible + Sous-facturation + règles de suspicion
         statutFinal = 'suspect';
-      } else if (displayDiagnostic.urgence === 'high' || displayDiagnostic.urgence === 'medium' || tarifHoraireReel < 85) {
-        statutFinal = 'attention'; // À surveiller
+      } else if (displayDiagnostic.urgence === 'medium') {
+        // À surveiller: Dette prestation
+        statutFinal = 'attention';
       } else {
+        // Sains: Équilibre
         statutFinal = 'sain';
       }
 
@@ -952,9 +955,7 @@ const FinanceModern = () => {
                           {[
                             { key: 'dette_prestation', label: 'Dette prestation', icon: AlertCircle, color: 'orange' },
                             { key: 'sous_facturation', label: 'Sous-facturation', icon: TrendingDown, color: 'red' },
-                            { key: 'rentabilite_faible', label: 'Rentabilité faible', icon: Euro, color: 'purple' },
-                            { key: 'facturation_insuffisante', label: 'Facturation insuffisante', icon: AlertTriangle, color: 'red' },
-                            { key: 'surveillance', label: 'À surveiller', icon: Eye, color: 'blue' },
+                            { key: 'rentabilite_faible', label: 'Rentabilité faible', icon: Euro, color: 'red' },
                             { key: 'equilibre', label: 'Équilibre', icon: CheckCircle, color: 'green' }
                           ].map((diagnostic) => {
                             const count = clientsAnalyzed.filter(c => c.diagnostic?.type === diagnostic.key).length;
@@ -1189,8 +1190,6 @@ const FinanceModern = () => {
                                 {client.diagnostic?.type === 'dette_prestation' ? 'Dette Prestation' :
                                  client.diagnostic?.type === 'sous_facturation' ? 'Sous-Facturation' :
                                  client.diagnostic?.type === 'rentabilite_faible' ? 'Rentabilité Faible' :
-                                 client.diagnostic?.type === 'facturation_insuffisante' ? 'Facturation Insuffisante' :
-                                 client.diagnostic?.type === 'surveillance' ? 'À Surveiller' :
                                  'Équilibre Sain'}
                               </div>
                               <p className="text-xs text-gray-600 leading-relaxed px-1">
@@ -1583,7 +1582,7 @@ const FinanceModern = () => {
                 color: 'red',
                 background: 'from-red-50 to-pink-50',
                 border: 'border-red-200',
-                description: 'Les heures prestées dépassent significativement la facturation émise.',
+                description: 'Les heures prestées dépassent significativement la facturation émise (Facturation insuffisante).',
                 recommendations: [
                   'Émettre une facturation complémentaire immédiatement',
                   'Réviser les tarifs appliqués',
