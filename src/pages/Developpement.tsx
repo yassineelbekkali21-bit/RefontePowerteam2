@@ -1186,7 +1186,15 @@ const DraggableCard: React.FC<DraggableCardProps> = ({ plan, onView }) => {
       }`}
     >
       <div className="flex items-center justify-between mb-2">
-        <h4 className="font-medium text-sm">{plan.title}</h4>
+        <div className="flex items-center space-x-2">
+          <h4 className="font-medium text-sm">{plan.title}</h4>
+          {plan.createdFrom === 'client-file' && (
+            <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 text-xs">
+              <User className="w-3 h-3 mr-1" />
+              Client
+            </Badge>
+          )}
+        </div>
         <Badge className={`${getPriorityColor(plan.priority)} text-xs`}>
           {plan.priority === 'high' ? 'Urgent' : plan.priority === 'medium' ? 'Moyen' : 'Basse'}
         </Badge>
@@ -1297,6 +1305,25 @@ const Developpement: React.FC = () => {
   const [isPlanModalOpen, setIsPlanModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isQuickCreateOpen, setIsQuickCreateOpen] = useState(false);
+  const [showClientPlansOnly, setShowClientPlansOnly] = useState(false);
+
+  // Fonction pour filtrer les plans selon l'origine
+  const getFilteredPlans = (status: string) => {
+    const statusPlans = getPlansByStatus(status as any);
+    if (showClientPlansOnly) {
+      return statusPlans.filter(plan => plan.createdFrom === 'client-file');
+    }
+    return statusPlans;
+  };
+
+  // Statistiques des plans créés depuis la fiche client
+  const clientPlansStats = {
+    total: kanbanPlans.filter(p => p.createdFrom === 'client-file').length,
+    todo: kanbanPlans.filter(p => p.createdFrom === 'client-file' && p.status === 'todo').length,
+    inprogress: kanbanPlans.filter(p => p.createdFrom === 'client-file' && p.status === 'inprogress').length,
+    validation: kanbanPlans.filter(p => p.createdFrom === 'client-file' && p.status === 'validation').length,
+    done: kanbanPlans.filter(p => p.createdFrom === 'client-file' && p.status === 'done').length,
+  };
 
   // Les fonctions Drag & Drop et View Plan sont définies plus bas
 
@@ -1602,12 +1629,61 @@ const Developpement: React.FC = () => {
         {/* Gestion des plans Tab */}
         {activeTab === 'gestion-plans' && (
           <div className="space-y-6">
+            {/* Statistiques et filtres des plans clients */}
+            {clientPlansStats.total > 0 && (
+              <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200">
+                <CardHeader className="pb-4">
+                  <CardTitle className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <User className="w-5 h-5 text-blue-600" />
+                      <span className="text-blue-800">Plans créés depuis les fiches clients</span>
+                      <Badge className="bg-blue-100 text-blue-700">{clientPlansStats.total}</Badge>
+                    </div>
+                    <Button
+                      variant={showClientPlansOnly ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setShowClientPlansOnly(!showClientPlansOnly)}
+                      className={showClientPlansOnly ? "bg-blue-600 hover:bg-blue-700" : "text-blue-700 border-blue-300 hover:bg-blue-50"}
+                    >
+                      <Filter className="w-4 h-4 mr-2" />
+                      {showClientPlansOnly ? 'Afficher tous' : 'Filtrer clients uniquement'}
+                    </Button>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-4 gap-4">
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-gray-700">{clientPlansStats.todo}</div>
+                      <div className="text-sm text-gray-600">À Faire</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-blue-600">{clientPlansStats.inprogress}</div>
+                      <div className="text-sm text-gray-600">En Cours</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-orange-600">{clientPlansStats.validation}</div>
+                      <div className="text-sm text-gray-600">Validation</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-green-600">{clientPlansStats.done}</div>
+                      <div className="text-sm text-gray-600">Terminés</div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <GitBranch className="w-5 h-5" />
                   Kanban - Gestion des Plans de Correction
                   <Badge variant="outline" className="ml-2">Drag & Drop</Badge>
+                  {showClientPlansOnly && (
+                    <Badge className="bg-blue-100 text-blue-700">
+                      Plans clients uniquement
+                    </Badge>
+                  )}
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -1620,8 +1696,8 @@ const Developpement: React.FC = () => {
                     <DroppableColumn
                       id="todo"
                       title="À Faire"
-                      count={getPlansByStatus('todo').length}
-                      plans={getPlansByStatus('todo')}
+                      count={getFilteredPlans('todo').length}
+                      plans={getFilteredPlans('todo')}
                       bgColor="bg-gray-100"
                       textColor="text-gray-700"
                       onViewPlan={handleViewPlan}
@@ -1630,8 +1706,8 @@ const Developpement: React.FC = () => {
                     <DroppableColumn
                       id="inprogress"
                       title="En Cours"
-                      count={getPlansByStatus('inprogress').length}
-                      plans={getPlansByStatus('inprogress')}
+                      count={getFilteredPlans('inprogress').length}
+                      plans={getFilteredPlans('inprogress')}
                       bgColor="bg-blue-100"
                       textColor="text-blue-700"
                       onViewPlan={handleViewPlan}
@@ -1640,8 +1716,8 @@ const Developpement: React.FC = () => {
                     <DroppableColumn
                       id="validation"
                       title="En Validation"
-                      count={getPlansByStatus('validation').length}
-                      plans={getPlansByStatus('validation')}
+                      count={getFilteredPlans('validation').length}
+                      plans={getFilteredPlans('validation')}
                       bgColor="bg-orange-100"
                       textColor="text-orange-700"
                       onViewPlan={handleViewPlan}
@@ -1650,8 +1726,8 @@ const Developpement: React.FC = () => {
                     <DroppableColumn
                       id="done"
                       title="Terminé"
-                      count={getPlansByStatus('done').length}
-                      plans={getPlansByStatus('done')}
+                      count={getFilteredPlans('done').length}
+                      plans={getFilteredPlans('done')}
                       bgColor="bg-green-100"
                       textColor="text-green-700"
                       onViewPlan={handleViewPlan}

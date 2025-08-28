@@ -35,6 +35,7 @@ interface PlansContextType {
   deletePlan: (id: string) => void;
   getPlanById: (id: string) => CorrectionPlan | undefined;
   getPlansByStatus: (status: CorrectionPlan['status']) => CorrectionPlan[];
+  getPlansByClient: (clientName: string) => CorrectionPlan[];
 }
 
 const PlansContext = createContext<PlansContextType | undefined>(undefined);
@@ -165,13 +166,21 @@ export const PlansProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     return plans.filter(plan => plan.status === status);
   };
 
+  const getPlansByClient = (clientName: string): CorrectionPlan[] => {
+    return plans.filter(plan => 
+      plan.client.toLowerCase().includes(clientName.toLowerCase()) ||
+      clientName.toLowerCase().includes(plan.client.toLowerCase())
+    );
+  };
+
   const value: PlansContextType = {
     plans,
     addPlan,
     updatePlan,
     deletePlan,
     getPlanById,
-    getPlansByStatus
+    getPlansByStatus,
+    getPlansByClient
   };
 
   return (

@@ -36,6 +36,7 @@ import {
   Minus,
   Edit3,
   Check,
+  ExternalLink,
   X
 } from 'lucide-react';
 
@@ -67,13 +68,10 @@ const ClientDetailFinal: React.FC<ClientDetailFinalProps> = ({
   onCorrectionPlanModalOpen,
   onPackageRevisionModalOpen
 }) => {
-  const { plans } = usePlans();
+  const { getPlansByClient } = usePlans();
   
   // Récupérer les plans de correction liés à ce client
-  const clientPlans = plans.filter(plan => 
-    plan.client === client.name || 
-    plan.client.toLowerCase().includes(client.name.toLowerCase())
-  );
+  const clientPlans = getPlansByClient(client.name);
   const [activeTab, setActiveTab] = useState<'categorie' | 'collaborateur' | 'entite'>('categorie');
   const { toast } = useToast();
   
@@ -1131,10 +1129,21 @@ const ClientDetailFinal: React.FC<ClientDetailFinalProps> = ({
           <div className="col-span-12 mt-6">
             <Card className="bg-gradient-to-br from-orange-50 to-red-50 border-0 shadow-lg">
               <CardHeader className="pb-4">
-                <CardTitle className="text-lg font-semibold text-orange-800 flex items-center">
-                  <FileText className="w-5 h-5 mr-2" />
-                  Plans de Correction ({clientPlans.length})
-                </CardTitle>
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-lg font-semibold text-orange-800 flex items-center">
+                    <FileText className="w-5 h-5 mr-2" />
+                    Plans de Correction ({clientPlans.length})
+                  </CardTitle>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => window.location.href = '/developpement'}
+                    className="text-orange-700 border-orange-300 hover:bg-orange-50"
+                  >
+                    <ExternalLink className="w-4 h-4 mr-2" />
+                    Voir dans Développement
+                  </Button>
+                </div>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
