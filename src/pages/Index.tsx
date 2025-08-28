@@ -292,21 +292,28 @@ const Index = () => {
                 <ArrowRight className="h-4 w-4 text-gray-400 group-hover:text-cyan-600 transition-colors" />
                       </div>
                     </CardHeader>
-            <CardContent className="space-y-3">
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-600">Actives</span>
-                <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
-                  127
-                </Badge>
+                        <CardContent>
+              <div className="text-center space-y-4">
+                <div>
+                  <div className="text-3xl font-bold text-gray-900 mb-2">
+                    87.3%
+                  </div>
+                  <div className="text-sm text-gray-600">
+                    Complétion Timesheet
+                  </div>
+                </div>
+                
+                <div className="w-full bg-gray-200 rounded-full h-3">
+                  <div 
+                    className="h-3 rounded-full bg-gradient-to-r from-cyan-500 to-blue-500 transition-all duration-500"
+                    style={{ width: '87.3%' }}
+                  ></div>
+                </div>
+                
+                <div className="text-xs text-gray-500">
+                  Mise à jour: il y a 2h
+                </div>
               </div>
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-600">Heures facturées</span>
-                <span className="text-sm font-medium text-gray-900">2,847h</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-600">Taux moyen</span>
-                <span className="text-sm font-medium text-cyan-600">€89/h</span>
-                        </div>
             </CardContent>
           </Card>
 

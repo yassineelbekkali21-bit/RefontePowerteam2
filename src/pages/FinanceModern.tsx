@@ -1396,19 +1396,19 @@ const FinanceModern = () => {
           </TabsContent>
 
           <TabsContent value="budgets" className="space-y-8">
-            {/* Header moderne Web 3.0 */}
-            <div className="relative overflow-hidden bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50 rounded-3xl p-8 border border-white/20 shadow-xl">
+            {/* Header focalisé sur les heures */}
+            <div className="relative overflow-hidden bg-gradient-to-br from-indigo-50 via-blue-50 to-cyan-50 rounded-3xl p-8 border border-white/20 shadow-xl">
               {/* Éléments décoratifs */}
-              <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-blue-400/20 to-purple-400/20 rounded-full blur-3xl"></div>
-              <div className="absolute bottom-0 left-0 w-48 h-48 bg-gradient-to-tr from-emerald-400/20 to-blue-400/20 rounded-full blur-2xl"></div>
+              <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-indigo-400/20 to-cyan-400/20 rounded-full blur-3xl"></div>
+              <div className="absolute bottom-0 left-0 w-48 h-48 bg-gradient-to-tr from-blue-400/20 to-indigo-400/20 rounded-full blur-2xl"></div>
               
               <div className="relative z-10">
                 <div className="flex items-center justify-between mb-6">
                   <div>
                     <h1 className="text-3xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
-                      Pilotage Budgétaire Intelligent
+                      Budgets Horaires
                     </h1>
-                    <p className="text-gray-600 mt-2">Vision 360° • Prédictions IA • Performance temps réel</p>
+                    <p className="text-gray-600 mt-2">Pilotage temps • Capacité • Performance horaire</p>
                   </div>
                   
                   {/* Actions header */}
@@ -1424,24 +1424,33 @@ const FinanceModern = () => {
                       </SelectContent>
                     </Select>
                     
+                    <Button 
+                      variant="outline"
+                      className="bg-white/90 hover:bg-white text-gray-900 border-white/30 backdrop-blur-sm shadow-lg transition-all duration-300 hover:shadow-xl"
+                      onClick={() => setShowRealisePartnersSidebar(true)}
+                    >
+                      <Euro className="w-4 h-4 mr-2" />
+                      Métriques €
+                    </Button>
+                    
                     <Button className="bg-white/90 hover:bg-white text-gray-900 border-white/30 backdrop-blur-sm shadow-lg transition-all duration-300 hover:shadow-xl">
                       <FileText className="w-4 h-4 mr-2" />
-                      Exporter Rapport
+                      Exporter
                     </Button>
                   </div>
                 </div>
                 
-                {/* Métriques panoramiques */}
+                {/* Métriques horaires panoramiques */}
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
                   <div className="bg-white/60 backdrop-blur-xl rounded-2xl p-6 border border-white/30 hover:bg-white/70 transition-all duration-300">
                     <div className="flex items-center space-x-4">
-                      <div className="p-3 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl shadow-lg">
+                      <div className="p-3 bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-xl shadow-lg">
                         <Target className="w-6 h-6 text-white" />
                       </div>
                       <div>
-                        <p className="text-sm font-medium text-gray-600">Budget Global</p>
-                        <p className="text-2xl font-bold text-gray-900">{(budgetEconomiqueAnnuel / 1000000).toFixed(1)}M€</p>
-                        <p className="text-xs text-green-600 font-medium">+12% vs N-1</p>
+                        <p className="text-sm font-medium text-gray-600">Budget Total</p>
+                        <p className="text-2xl font-bold text-gray-900">{(budgetHoraireTotal / 1000).toFixed(1)}K h</p>
+                        <p className="text-xs text-blue-600 font-medium">35,000 heures</p>
                       </div>
                     </div>
                   </div>
@@ -1449,38 +1458,38 @@ const FinanceModern = () => {
                   <div className="bg-white/60 backdrop-blur-xl rounded-2xl p-6 border border-white/30 hover:bg-white/70 transition-all duration-300">
                     <div className="flex items-center space-x-4">
                       <div className="p-3 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-xl shadow-lg">
-                        <TrendingUp className="w-6 h-6 text-white" />
+                        <Activity className="w-6 h-6 text-white" />
                       </div>
                       <div>
                         <p className="text-sm font-medium text-gray-600">Réalisé</p>
-                        <p className="text-2xl font-bold text-gray-900">{(realiseEconomiqueAnnuel / 1000000).toFixed(1)}M€</p>
-                        <p className="text-xs text-emerald-600 font-medium">{tauxRealisationEconomique}% atteint</p>
+                        <p className="text-2xl font-bold text-gray-900">{(realiseHoraireTotal / 1000).toFixed(1)}K h</p>
+                        <p className="text-xs text-emerald-600 font-medium">75% du budget</p>
                       </div>
                     </div>
                   </div>
                   
                   <div className="bg-white/60 backdrop-blur-xl rounded-2xl p-6 border border-white/30 hover:bg-white/70 transition-all duration-300">
                     <div className="flex items-center space-x-4">
-                      <div className="p-3 bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl shadow-lg">
+                      <div className="p-3 bg-gradient-to-br from-cyan-500 to-cyan-600 rounded-xl shadow-lg">
                         <Clock className="w-6 h-6 text-white" />
                       </div>
                       <div>
-                        <p className="text-sm font-medium text-gray-600">En Cours</p>
-                        <p className="text-2xl font-bold text-gray-900">0.75M€</p>
-                        <p className="text-xs text-orange-600 font-medium">142 dossiers</p>
+                        <p className="text-sm font-medium text-gray-600">Capacité Restante</p>
+                        <p className="text-2xl font-bold text-gray-900">{((budgetHoraireTotal - realiseHoraireTotal) / 1000).toFixed(1)}K h</p>
+                        <p className="text-xs text-cyan-600 font-medium">25% disponible</p>
                       </div>
                     </div>
                   </div>
                   
                   <div className="bg-white/60 backdrop-blur-xl rounded-2xl p-6 border border-white/30 hover:bg-white/70 transition-all duration-300">
                     <div className="flex items-center space-x-4">
-                      <div className="p-3 bg-gradient-to-br from-red-500 to-red-600 rounded-xl shadow-lg">
-                        <AlertTriangle className="w-6 h-6 text-white" />
+                      <div className="p-3 bg-gradient-to-br from-amber-500 to-amber-600 rounded-xl shadow-lg">
+                        <Users className="w-6 h-6 text-white" />
                       </div>
                       <div>
-                        <p className="text-sm font-medium text-gray-600">À Surveiller</p>
-                        <p className="text-2xl font-bold text-gray-900">0.15M€</p>
-                        <p className="text-xs text-red-600 font-medium">8 clients</p>
+                        <p className="text-sm font-medium text-gray-600">Productivité</p>
+                        <p className="text-2xl font-bold text-gray-900">91.2%</p>
+                        <p className="text-xs text-amber-600 font-medium">Excellent</p>
                       </div>
                     </div>
                   </div>
@@ -1488,75 +1497,76 @@ const FinanceModern = () => {
               </div>
             </div>
 
-            {/* Dashboard budgétaire intelligent */}
+            {/* Dashboard budgétaire horaire */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
               
-              {/* Panneau principal - Liste des budgets */}
+              {/* Panneau principal - Portfolio horaire */}
               <div className="lg:col-span-2">
                 <Card className="bg-white/95 backdrop-blur-xl border-white/20 shadow-xl">
-                  <CardHeader className="bg-gradient-to-r from-gray-50 to-slate-50 rounded-t-xl">
+                  <CardHeader className="bg-gradient-to-r from-indigo-50 to-cyan-50 rounded-t-xl">
                     <div className="flex items-center justify-between">
                       <CardTitle className="flex items-center space-x-3">
-                        <div className="p-2 bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg">
-                          <Wallet className="w-5 h-5 text-white" />
+                        <div className="p-2 bg-gradient-to-br from-indigo-500 to-cyan-600 rounded-lg">
+                          <Clock className="w-5 h-5 text-white" />
                         </div>
-                        <span>Portfolio Budgétaire</span>
+                        <span>Portfolio Budgets Horaires</span>
                       </CardTitle>
                       
-                      {/* Filtres rapides */}
+                      {/* Filtres */}
                       <div className="flex items-center space-x-3">
                         <div className="flex bg-gray-100 rounded-xl p-1">
                           <Button variant="ghost" size="sm" className="h-8 px-3 bg-white shadow-sm">
                             Tous
                           </Button>
                           <Button variant="ghost" size="sm" className="h-8 px-3">
-                            Excellents
+                            Sur-budgets
                           </Button>
                           <Button variant="ghost" size="sm" className="h-8 px-3">
-                            À Risque
+                            Sous-budgets
                           </Button>
                         </div>
-                        <Button variant="outline" size="sm">
-                          <Search className="w-4 h-4" />
-                        </Button>
                       </div>
                     </div>
                   </CardHeader>
                   
                   <CardContent className="p-0">
-                    {/* En-têtes de colonnes */}
+                    {/* En-têtes */}
                     <div className="grid grid-cols-12 gap-4 px-6 py-4 bg-gray-50/50 border-b border-gray-100 text-sm font-medium text-gray-600">
                       <div className="col-span-4">Client & Gestionnaire</div>
-                      <div className="col-span-2 text-center">Budget Annuel</div>
-                      <div className="col-span-2 text-center">Réalisé</div>
+                      <div className="col-span-2 text-center">Budget Heures</div>
+                      <div className="col-span-2 text-center">Prestées</div>
                       <div className="col-span-2 text-center">Progression</div>
-                      <div className="col-span-2 text-center">Performance</div>
+                      <div className="col-span-2 text-center">Efficacité</div>
                     </div>
                     
-                    {/* Liste des clients avec design moderne */}
+                    {/* Liste des budgets horaires */}
                     <div className="max-h-[600px] overflow-y-auto">
                       {analysesFinancieres.slice(0, 15).map((client, index) => {
+                        const budgetHeures = client.objectifAnnuel.heures;
+                        const heuresRealisees = client.realiseADate.heures;
+                        const pourcentageHeures = (heuresRealisees / budgetHeures) * 100;
+                        
                         const progressionColor = 
-                          client.realiseADate.pourcentageCA >= 90 ? 'from-emerald-500 to-green-500' :
-                          client.realiseADate.pourcentageCA >= 70 ? 'from-blue-500 to-indigo-500' :
-                          client.realiseADate.pourcentageCA >= 50 ? 'from-orange-500 to-amber-500' :
+                          pourcentageHeures >= 90 ? 'from-emerald-500 to-green-500' :
+                          pourcentageHeures >= 70 ? 'from-blue-500 to-indigo-500' :
+                          pourcentageHeures >= 50 ? 'from-amber-500 to-orange-500' :
                           'from-red-500 to-rose-500';
                         
-                        const performanceLabel = 
-                          client.realiseADate.pourcentageCA >= 90 ? 'Excellent' :
-                          client.realiseADate.pourcentageCA >= 70 ? 'Bon' :
-                          client.realiseADate.pourcentageCA >= 50 ? 'Modéré' : 'À Risque';
+                        const efficaciteLabel = 
+                          pourcentageHeures >= 95 ? 'Optimal' :
+                          pourcentageHeures >= 80 ? 'Bon' :
+                          pourcentageHeures >= 60 ? 'Modéré' : 'Faible';
                           
-                        const performanceBg = 
-                          client.realiseADate.pourcentageCA >= 90 ? 'bg-emerald-100 text-emerald-700 border-emerald-200' :
-                          client.realiseADate.pourcentageCA >= 70 ? 'bg-blue-100 text-blue-700 border-blue-200' :
-                          client.realiseADate.pourcentageCA >= 50 ? 'bg-orange-100 text-orange-700 border-orange-200' :
+                        const efficaciteBg = 
+                          pourcentageHeures >= 95 ? 'bg-emerald-100 text-emerald-700 border-emerald-200' :
+                          pourcentageHeures >= 80 ? 'bg-blue-100 text-blue-700 border-blue-200' :
+                          pourcentageHeures >= 60 ? 'bg-amber-100 text-amber-700 border-amber-200' :
                           'bg-red-100 text-red-700 border-red-200';
                         
                         return (
                           <div 
                             key={client.id} 
-                            className="grid grid-cols-12 gap-4 px-6 py-5 border-b border-gray-50 hover:bg-gradient-to-r hover:from-blue-50/50 hover:to-purple-50/30 transition-all duration-300 cursor-pointer group"
+                            className="grid grid-cols-12 gap-4 px-6 py-5 border-b border-gray-50 hover:bg-gradient-to-r hover:from-indigo-50/50 hover:to-cyan-50/30 transition-all duration-300 cursor-pointer group"
                             onClick={() => {
                               setSelectedClient(client.id);
                               setShowClientDetail(true);
@@ -1564,60 +1574,60 @@ const FinanceModern = () => {
                           >
                             {/* Client & Gestionnaire */}
                             <div className="col-span-4 flex items-center space-x-4">
-                              <div className="w-10 h-10 bg-gradient-to-br from-blue-400 to-purple-500 rounded-xl flex items-center justify-center text-white font-bold text-sm shadow-lg">
+                              <div className="w-10 h-10 bg-gradient-to-br from-indigo-400 to-cyan-500 rounded-xl flex items-center justify-center text-white font-bold text-sm shadow-lg">
                                 {client.nom.charAt(0)}
                               </div>
                               <div>
-                                <h4 className="font-semibold text-gray-900 group-hover:text-blue-900 transition-colors">
+                                <h4 className="font-semibold text-gray-900 group-hover:text-indigo-900 transition-colors">
                                   {client.nom}
                                 </h4>
                                 <p className="text-sm text-gray-500">{client.gestionnaire}</p>
                               </div>
                             </div>
                             
-                            {/* Budget Annuel */}
+                            {/* Budget Heures */}
                             <div className="col-span-2 text-center">
                               <p className="font-bold text-gray-900">
-                                {(client.objectifAnnuel.economique / 1000).toFixed(0)}K€
+                                {budgetHeures.toLocaleString()}h
                               </p>
                               <p className="text-xs text-gray-500">{client.typeFacturation}</p>
                             </div>
                             
-                            {/* Réalisé */}
+                            {/* Prestées */}
                             <div className="col-span-2 text-center">
-                              <p className="font-bold text-emerald-600">
-                                {(client.realiseADate.chiffreAffaires / 1000).toFixed(0)}K€
+                              <p className="font-bold text-indigo-600">
+                                {heuresRealisees.toLocaleString()}h
                               </p>
                               <p className="text-xs text-gray-500">
-                                {client.realiseADate.heures}h prestées
+                                {(budgetHeures - heuresRealisees).toLocaleString()}h restantes
                               </p>
                             </div>
                             
-                            {/* Progression avec barre */}
+                            {/* Progression */}
                             <div className="col-span-2">
                               <div className="text-center mb-2">
                                 <span className="font-bold text-gray-900">
-                                  {client.realiseADate.pourcentageCA.toFixed(1)}%
+                                  {pourcentageHeures.toFixed(1)}%
                                 </span>
                               </div>
                               <div className="w-full bg-gray-200 rounded-full h-2">
                                 <div 
                                   className={`h-2 rounded-full bg-gradient-to-r ${progressionColor} transition-all duration-500`}
-                                  style={{ width: `${Math.min(client.realiseADate.pourcentageCA, 100)}%` }}
+                                  style={{ width: `${Math.min(pourcentageHeures, 100)}%` }}
                                 ></div>
                               </div>
                             </div>
                             
-                            {/* Performance */}
+                            {/* Efficacité */}
                             <div className="col-span-2 text-center">
                               <Badge 
                                 variant="outline" 
-                                className={`${performanceBg} font-medium`}
+                                className={`${efficaciteBg} font-medium`}
                               >
-                                {performanceLabel}
+                                {efficaciteLabel}
                               </Badge>
                               <p className="text-xs text-gray-500 mt-1">
-                                {(client.realiseADate.heures > 0 ? client.realiseADate.chiffreAffaires / client.realiseADate.heures : 0).toFixed(0)}€/h
+                                {(heuresRealisees / budgetHeures * 100).toFixed(0)}% utilisé
                               </p>
                             </div>
                           </div>
@@ -1628,116 +1638,82 @@ const FinanceModern = () => {
                 </Card>
               </div>
               
-              {/* Panneau latéral - Analytics et insights */}
+              {/* Panneau latéral - Analytics horaires */}
               <div className="space-y-6">
                 
-                {/* Insights IA */}
-                <Card className="bg-gradient-to-br from-purple-50 to-indigo-50 border-purple-200/50 shadow-lg">
+                {/* Répartition géographique */}
+                <Card className="bg-gradient-to-br from-indigo-50 to-cyan-50 border-indigo-200/50 shadow-lg">
                   <CardHeader>
-                    <CardTitle className="flex items-center space-x-2 text-purple-800">
-                      <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-lg flex items-center justify-center">
-                        <BarChart3 className="w-4 h-4 text-white" />
+                    <CardTitle className="flex items-center space-x-2 text-indigo-800">
+                      <div className="w-8 h-8 bg-gradient-to-br from-indigo-500 to-cyan-600 rounded-lg flex items-center justify-center">
+                        <Globe className="w-4 h-4 text-white" />
                       </div>
-                      <span>Insights IA</span>
+                      <span>Répartition Géographique</span>
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
-                    <div className="p-4 bg-white/60 rounded-xl border border-purple-200/30">
-                      <div className="flex items-start space-x-3">
-                        <div className="w-6 h-6 bg-emerald-100 rounded-full flex items-center justify-center mt-0.5">
-                          <ArrowUpCircle className="w-4 h-4 text-emerald-600" />
-                        </div>
-                        <div>
-                          <p className="text-sm font-medium text-gray-900">Opportunité détectée</p>
-                          <p className="text-xs text-gray-600 mt-1">12 clients peuvent dépasser leur budget de +15%</p>
-                        </div>
-                      </div>
-                    </div>
-                    
-                    <div className="p-4 bg-white/60 rounded-xl border border-purple-200/30">
-                      <div className="flex items-start space-x-3">
-                        <div className="w-6 h-6 bg-orange-100 rounded-full flex items-center justify-center mt-0.5">
-                          <AlertTriangle className="w-4 h-4 text-orange-600" />
-                        </div>
-                        <div>
-                          <p className="text-sm font-medium text-gray-900">Alerte prédictive</p>
-                          <p className="text-xs text-gray-600 mt-1">8 budgets risquent de ne pas être atteints</p>
+                    <div className="space-y-3">
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm text-gray-600">🇧🇪 Belgique</span>
+                        <div className="flex items-center space-x-2">
+                          <div className="w-20 h-2 bg-gray-200 rounded-full">
+                            <div className="w-4/5 h-2 bg-indigo-500 rounded-full"></div>
+                          </div>
+                          <span className="text-sm font-medium">{(realiseHoraireBelgique / 1000).toFixed(1)}K h</span>
                         </div>
                       </div>
-                    </div>
-                    
-                    <div className="p-4 bg-white/60 rounded-xl border border-purple-200/30">
-                      <div className="flex items-start space-x-3">
-                        <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center mt-0.5">
-                          <Target className="w-4 h-4 text-blue-600" />
-                        </div>
-                        <div>
-                          <p className="text-sm font-medium text-gray-900">Recommandation</p>
-                          <p className="text-xs text-gray-600 mt-1">Réviser 5 budgets avant fin trimestre</p>
+                      
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm text-gray-600">🇲🇦 Maroc</span>
+                        <div className="flex items-center space-x-2">
+                          <div className="w-20 h-2 bg-gray-200 rounded-full">
+                            <div className="w-1/5 h-2 bg-cyan-500 rounded-full"></div>
+                          </div>
+                          <span className="text-sm font-medium">{(realiseHoraireMaroc / 1000).toFixed(1)}K h</span>
                         </div>
                       </div>
                     </div>
                   </CardContent>
                 </Card>
                 
-                {/* Statistiques rapides */}
+                {/* Tendances horaires */}
                 <Card className="bg-gradient-to-br from-slate-50 to-gray-50 border-gray-200/50 shadow-lg">
                   <CardHeader>
                     <CardTitle className="flex items-center space-x-2 text-gray-800">
                       <div className="w-8 h-8 bg-gradient-to-br from-gray-600 to-slate-700 rounded-lg flex items-center justify-center">
-                        <PieChart className="w-4 h-4 text-white" />
+                        <BarChart3 className="w-4 h-4 text-white" />
                       </div>
-                      <span>Répartition Performance</span>
+                      <span>Tendances Mensuelles</span>
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm text-gray-600">Excellents (≥90%)</span>
-                      <div className="flex items-center space-x-2">
-                        <div className="w-16 h-2 bg-gray-200 rounded-full">
-                          <div className="w-3/4 h-2 bg-emerald-500 rounded-full"></div>
-                        </div>
-                        <span className="text-sm font-medium">18</span>
-                      </div>
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-gray-900 mb-1">+12.5%</div>
+                      <div className="text-sm text-green-600">vs mois précédent</div>
                     </div>
                     
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm text-gray-600">Bons (70-89%)</span>
-                      <div className="flex items-center space-x-2">
-                        <div className="w-16 h-2 bg-gray-200 rounded-full">
-                          <div className="w-1/2 h-2 bg-blue-500 rounded-full"></div>
-                        </div>
-                        <span className="text-sm font-medium">12</span>
+                    <div className="space-y-3">
+                      <div className="flex justify-between text-sm">
+                        <span className="text-gray-600">Janvier</span>
+                        <span className="font-medium">2,100h</span>
                       </div>
-                    </div>
-                    
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm text-gray-600">Modérés (50-69%)</span>
-                      <div className="flex items-center space-x-2">
-                        <div className="w-16 h-2 bg-gray-200 rounded-full">
-                          <div className="w-1/4 h-2 bg-orange-500 rounded-full"></div>
-                        </div>
-                        <span className="text-sm font-medium">6</span>
+                      <div className="flex justify-between text-sm">
+                        <span className="text-gray-600">Février</span>
+                        <span className="font-medium">2,365h</span>
                       </div>
-                    </div>
-                    
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm text-gray-600">À Risque (<50%)</span>
-                      <div className="flex items-center space-x-2">
-                        <div className="w-16 h-2 bg-gray-200 rounded-full">
-                          <div className="w-1/6 h-2 bg-red-500 rounded-full"></div>
-                        </div>
-                        <span className="text-sm font-medium">3</span>
+                      <div className="flex justify-between text-sm">
+                        <span className="text-gray-600">Mars (prév.)</span>
+                        <span className="font-medium text-blue-600">2,450h</span>
                       </div>
                     </div>
                   </CardContent>
                 </Card>
                 
                 {/* Actions rapides */}
-                <Card className="bg-gradient-to-br from-blue-50 to-cyan-50 border-blue-200/50 shadow-lg">
+                <Card className="bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-200/50 shadow-lg">
                   <CardHeader>
                     <CardTitle className="flex items-center space-x-2 text-blue-800">
-                      <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-cyan-600 rounded-lg flex items-center justify-center">
+                      <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center">
                         <Settings className="w-4 h-4 text-white" />
                       </div>
                       <span>Actions Rapides</span>
@@ -1746,17 +1722,17 @@ const FinanceModern = () => {
                   <CardContent className="space-y-3">
                     <Button variant="outline" className="w-full justify-start bg-white/60 hover:bg-white/80 transition-all">
                       <Target className="w-4 h-4 mr-2" />
-                      Réviser Budgets À Risque
+                      Réviser Capacités
                     </Button>
                     
                     <Button variant="outline" className="w-full justify-start bg-white/60 hover:bg-white/80 transition-all">
-                      <TrendingUp className="w-4 h-4 mr-2" />
-                      Optimiser Excellents
+                      <Activity className="w-4 h-4 mr-2" />
+                      Optimiser Planning
                     </Button>
                     
                     <Button variant="outline" className="w-full justify-start bg-white/60 hover:bg-white/80 transition-all">
                       <BarChart3 className="w-4 h-4 mr-2" />
-                      Rapport Mensuel
+                      Rapport Horaire
                     </Button>
                   </CardContent>
                 </Card>
@@ -2407,6 +2383,151 @@ const FinanceModern = () => {
         </DialogContent>
       </Dialog>
       </div>
+
+      {/* Sidebar contextuel pour métriques monétaires */}
+      <Sheet open={showRealisePartnersSidebar} onOpenChange={setShowRealisePartnersSidebar}>
+        <SheetContent side="right" className="w-96 bg-gradient-to-br from-emerald-50 to-green-50">
+          <SheetHeader>
+            <SheetTitle className="flex items-center space-x-2">
+              <Euro className="w-5 h-5 text-emerald-600" />
+              <span>Métriques Monétaires</span>
+            </SheetTitle>
+            <SheetDescription>
+              Vue économique des budgets horaires
+            </SheetDescription>
+          </SheetHeader>
+          
+          <div className="mt-6 space-y-6">
+            {/* KPIs monétaires globaux */}
+            <div className="grid grid-cols-2 gap-4">
+              <Card className="bg-white/60 backdrop-blur-sm">
+                <CardContent className="p-4">
+                  <div className="text-center">
+                    <div className="text-lg font-bold text-gray-900">{(budgetEconomiqueAnnuel / 1000000).toFixed(1)}M€</div>
+                    <div className="text-xs text-gray-600">Budget Total</div>
+                  </div>
+                </CardContent>
+              </Card>
+              
+              <Card className="bg-white/60 backdrop-blur-sm">
+                <CardContent className="p-4">
+                  <div className="text-center">
+                    <div className="text-lg font-bold text-emerald-600">{(realiseEconomiqueAnnuel / 1000000).toFixed(1)}M€</div>
+                    <div className="text-xs text-gray-600">Réalisé</div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+            
+            {/* Taux horaires moyens */}
+            <Card className="bg-white/60 backdrop-blur-sm">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-lg">Taux Horaires Moyens</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-gray-600">🇧🇪 Belgique</span>
+                  <span className="font-medium text-gray-900">€95/h</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-gray-600">🇲🇦 Maroc</span>
+                  <span className="font-medium text-gray-900">€42/h</span>
+                </div>
+                <div className="flex justify-between items-center border-t pt-2">
+                  <span className="text-sm font-medium text-gray-900">Moyenne Pondérée</span>
+                  <span className="font-bold text-emerald-600">€87/h</span>
+                </div>
+              </CardContent>
+            </Card>
+            
+            {/* CA par collaborateur type */}
+            <Card className="bg-white/60 backdrop-blur-sm">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-lg">CA par Profil</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-gray-600">Senior Partner</span>
+                  <span className="font-medium text-gray-900">145K€</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-gray-600">Manager</span>
+                  <span className="font-medium text-gray-900">89K€</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-gray-600">Consultant</span>
+                  <span className="font-medium text-gray-900">67K€</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-gray-600">Junior</span>
+                  <span className="font-medium text-gray-900">42K€</span>
+                </div>
+              </CardContent>
+            </Card>
+            
+            {/* Rentabilité par type de mission */}
+            <Card className="bg-white/60 backdrop-blur-sm">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-lg">Rentabilité Mission</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-gray-600">Forfait</span>
+                  <div className="flex items-center space-x-2">
+                    <div className="w-16 h-2 bg-gray-200 rounded-full">
+                      <div className="w-4/5 h-2 bg-emerald-500 rounded-full"></div>
+                    </div>
+                    <span className="text-sm font-medium">87%</span>
+                  </div>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-gray-600">Horaire</span>
+                  <div className="flex items-center space-x-2">
+                    <div className="w-16 h-2 bg-gray-200 rounded-full">
+                      <div className="w-3/4 h-2 bg-blue-500 rounded-full"></div>
+                    </div>
+                    <span className="text-sm font-medium">73%</span>
+                  </div>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-gray-600">Récurrent</span>
+                  <div className="flex items-center space-x-2">
+                    <div className="w-16 h-2 bg-gray-200 rounded-full">
+                      <div className="w-5/6 h-2 bg-green-500 rounded-full"></div>
+                    </div>
+                    <span className="text-sm font-medium">92%</span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+            
+            {/* Prévisionnel économique */}
+            <Card className="bg-white/60 backdrop-blur-sm">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-lg">Prévisionnel Q1</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-blue-600">2.8M€</div>
+                  <div className="text-sm text-gray-600">Objectif trimestre</div>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-600">Janvier</span>
+                  <span className="font-medium text-green-600">+8.2%</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-600">Février</span>
+                  <span className="font-medium text-blue-600">Prévu</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-600">Mars</span>
+                  <span className="font-medium text-gray-500">Projection</span>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </SheetContent>
+      </Sheet>
     </DashboardLayout>
   );
 };
