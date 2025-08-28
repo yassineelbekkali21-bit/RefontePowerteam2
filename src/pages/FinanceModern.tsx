@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -21,7 +22,9 @@ import { ruleEngine } from '@/utils/ruleEngine';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 
 const FinanceModern = () => {
-  const [activeTab, setActiveTab] = useState('overview');
+  const [searchParams] = useSearchParams();
+  const initialTab = searchParams.get('tab') || 'overview';
+  const [activeTab, setActiveTab] = useState(initialTab);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedFilters, setSelectedFilters] = useState({
     typeFacturation: 'tous',
@@ -43,6 +46,14 @@ const FinanceModern = () => {
   const [clientActions, setClientActions] = useState<{[clientId: string]: Array<{id: string, action: string, status: 'planned' | 'in_progress' | 'completed', dateCreated: Date, dateCompleted?: Date, notes?: string}>}>({});
   const [showActionDialog, setShowActionDialog] = useState<{open: boolean, clientId: string | null, action: string | null}>({open: false, clientId: null, action: null});
   const [actionNotes, setActionNotes] = useState('');
+
+  // Écouter les changements de paramètres URL
+  useEffect(() => {
+    const tabParam = searchParams.get('tab');
+    if (tabParam && ['overview', 'analysis', 'budgets'].includes(tabParam)) {
+      setActiveTab(tabParam);
+    }
+  }, [searchParams]);
 
   // Données financières spécifiques pour la vue d'ensemble
   const budgetEconomiqueAnnuel = 3200000; // 3.2M€

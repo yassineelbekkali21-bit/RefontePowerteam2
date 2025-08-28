@@ -147,8 +147,8 @@ const Index = () => {
                   </div>
                   <div className="text-sm text-gray-600">Entrants</div>
                 </div>
-              </div>
-              
+            </div>
+            
               <div className="space-y-2">
                 <div className="flex justify-between text-sm">
                   <span>CA Entrants</span>
@@ -214,14 +214,14 @@ const Index = () => {
                 <div className="flex items-center gap-3">
                   <div className="p-2 bg-indigo-100 rounded-lg">
                     <Calendar className="h-5 w-5 text-indigo-600" />
-                  </div>
+            </div>
                   <CardTitle className="text-lg">Planning</CardTitle>
-                </div>
+          </div>
                 <ArrowRight className="h-4 w-4 text-gray-400 group-hover:text-indigo-600 transition-colors" />
-              </div>
+        </div>
             </CardHeader>
             <CardContent className="space-y-3">
-              <div>
+            <div>
                 <div className="text-sm font-medium text-gray-900 mb-2">Aujourd'hui</div>
                 <div className="space-y-1">
                   {dashboardData.planning.aujourd_hui.slice(0, 2).map((item, idx) => (
@@ -234,15 +234,15 @@ const Index = () => {
                   {dashboardData.planning.aujourd_hui.length > 2 && (
                     <div className="text-xs text-gray-500 pl-4">
                       +{dashboardData.planning.aujourd_hui.length - 2} autres...
-                    </div>
+            </div>
                   )}
-                </div>
-              </div>
+            </div>
+          </div>
             </CardContent>
           </Card>
 
           {/* Bloc Plans en attente */}
-          <Card 
+                <Card 
             className="group cursor-pointer hover:shadow-xl transition-all duration-300 hover:scale-[1.02]"
             onClick={() => navigate('/developpement')}
           >
@@ -255,22 +255,58 @@ const Index = () => {
                   <CardTitle className="text-lg">Plans en attente</CardTitle>
                 </div>
                 <ArrowRight className="h-4 w-4 text-gray-400 group-hover:text-purple-600 transition-colors" />
-              </div>
+                            </div>
             </CardHeader>
             <CardContent>
               <div className="text-center">
                 <div className="text-3xl font-bold text-purple-600">
                   {dashboardData.plansEnAttente}
-                </div>
+                          </div>
                 <div className="text-sm text-gray-600 mt-1">Plans à traiter</div>
                 {dashboardData.plansEnAttente > 0 && (
                   <div className="mt-3">
                     <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200">
                       Action requise
                     </Badge>
-                  </div>
+                          </div>
                 )}
+                        </div>
+            </CardContent>
+          </Card>
+
+          {/* Bloc Prestations */}
+          <Card 
+            className="group cursor-pointer hover:shadow-xl transition-all duration-300 hover:scale-[1.02] bg-gradient-to-br from-cyan-50 to-blue-50 border-cyan-200"
+            onClick={() => navigate('/prestations')}
+          >
+            <CardHeader className="pb-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-gradient-to-br from-cyan-500 to-blue-500 text-white rounded-lg">
+                    <Briefcase className="h-5 w-5" />
+                  </div>
+                  <CardTitle className="text-lg bg-gradient-to-r from-cyan-600 to-blue-600 bg-clip-text text-transparent">
+                    Prestations
+                  </CardTitle>
+                        </div>
+                <ArrowRight className="h-4 w-4 text-gray-400 group-hover:text-cyan-600 transition-colors" />
+                      </div>
+                    </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-gray-600">Actives</span>
+                <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+                  127
+                </Badge>
               </div>
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-gray-600">Heures facturées</span>
+                <span className="text-sm font-medium text-gray-900">2,847h</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-gray-600">Taux moyen</span>
+                <span className="text-sm font-medium text-cyan-600">€89/h</span>
+                        </div>
             </CardContent>
           </Card>
 
@@ -295,7 +331,7 @@ const Index = () => {
                 <span className="text-sm text-gray-600">Restants</span>
                 <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
                   {dashboardData.conges.restants} jours
-                </Badge>
+                          </Badge>
               </div>
               <div className="space-y-2">
                 <div className="text-xs text-gray-500">Prochain congé</div>
@@ -307,21 +343,21 @@ const Index = () => {
                   <span className="text-gray-600">
                     ({dashboardData.conges.prochainCongePersonnel.duree}j)
                   </span>
-                </div>
-              </div>
+                        </div>
+                      </div>
               <div className="pt-2 border-t border-gray-100">
                 <div className="text-xs text-gray-500">Prochain férié</div>
                 <div className="text-sm font-medium">
                   {dashboardData.conges.prochainJourFerie.nom} • {formatDate(dashboardData.conges.prochainJourFerie.date)}
-                </div>
-              </div>
-            </CardContent>
+                        </div>
+                      </div>
+                    </CardContent>
           </Card>
 
           {/* Bloc Clients suspects */}
           <Card 
             className="group cursor-pointer hover:shadow-xl transition-all duration-300 hover:scale-[1.02]"
-            onClick={() => navigate('/finance')}
+            onClick={() => navigate('/finance?tab=analysis')}
           >
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
@@ -345,16 +381,16 @@ const Index = () => {
                     <Badge variant="destructive" className="bg-red-50 text-red-700 border-red-200">
                       Attention requise
                     </Badge>
-                  </div>
+          </div>
                 )}
-              </div>
+        </div>
             </CardContent>
           </Card>
 
           {/* Bloc CA Réalisé vs Budgété */}
-          <Card 
+              <Card 
             className="group cursor-pointer hover:shadow-xl transition-all duration-300 hover:scale-[1.02]"
-            onClick={() => navigate('/finance')}
+            onClick={() => navigate('/finance?tab=budgets')}
           >
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
@@ -363,22 +399,22 @@ const Index = () => {
                     <DollarSign className="h-5 w-5 text-emerald-600" />
                   </div>
                   <CardTitle className="text-lg">CA vs Budget</CardTitle>
-                </div>
+                        </div>
                 <ArrowRight className="h-4 w-4 text-gray-400 group-hover:text-emerald-600 transition-colors" />
-              </div>
+                      </div>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="space-y-2">
+                      <div className="space-y-2">
                 <div className="flex justify-between text-sm">
                   <span>Réalisé</span>
                   <span className="font-medium">{formatCurrency(dashboardData.ca.realise)}</span>
-                </div>
+                        </div>
                 <div className="flex justify-between text-sm">
                   <span>Budgété</span>
                   <span className="font-medium">{formatCurrency(dashboardData.ca.budgete)}</span>
-                </div>
-              </div>
-              
+                      </div>
+                    </div>
+                    
               <div>
                 <div className="flex justify-between text-sm mb-2">
                   <span>Progression</span>
@@ -387,7 +423,7 @@ const Index = () => {
                   </span>
                 </div>
                 <Progress value={dashboardData.ca.pourcentage} className="h-2" />
-              </div>
+                      </div>
             </CardContent>
           </Card>
 
@@ -419,9 +455,9 @@ const Index = () => {
                 <div className="text-xs text-gray-500">
                   Capacité {dashboardData.capacitePlanning >= 80 ? 'optimale' : 'disponible'}
                 </div>
-              </div>
-            </CardContent>
-          </Card>
+                  </div>
+                </CardContent>
+              </Card>
 
           {/* Bloc Accès rapide IA */}
           <Card 
@@ -439,14 +475,14 @@ const Index = () => {
                   </CardTitle>
                 </div>
                 <ArrowRight className="h-4 w-4 text-gray-400 group-hover:text-purple-600 transition-colors" />
-              </div>
-            </CardHeader>
-            <CardContent>
+        </div>
+          </CardHeader>
+          <CardContent>
               <div className="text-center space-y-3">
                 <div className="text-sm text-gray-600 mb-3">
                   Assistant intelligent Powerteam
                 </div>
-                <Button 
+              <Button 
                   className="w-full bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600"
                   onClick={(e) => {
                     e.stopPropagation();
@@ -455,7 +491,7 @@ const Index = () => {
                 >
                   <Zap className="h-4 w-4 mr-2" />
                   Démarrer chat
-                </Button>
+              </Button>
               </div>
             </CardContent>
           </Card>
@@ -483,8 +519,8 @@ const Index = () => {
                 <div className="text-sm text-gray-600 mb-3">
                   Créer présentations et supports
                 </div>
-                <Button 
-                  variant="outline"
+              <Button 
+                variant="outline" 
                   className="w-full border-green-200 text-green-700 hover:bg-green-50"
                   onClick={(e) => {
                     e.stopPropagation();
@@ -493,10 +529,10 @@ const Index = () => {
                 >
                   <Briefcase className="h-4 w-4 mr-2" />
                   Construire réunion
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
         </div>
       </div>
     </DashboardLayout>
