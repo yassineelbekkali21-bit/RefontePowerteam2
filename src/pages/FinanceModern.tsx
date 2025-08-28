@@ -37,6 +37,7 @@ const FinanceModern = () => {
   const [justificationDialog, setJustificationDialog] = useState({open: false, client: null});
   const [justificationText, setJustificationText] = useState('');
   const [selectedClient, setSelectedClient] = useState<string | null>(null);
+  const [showClientDetail, setShowClientDetail] = useState(false);
   const [selectedPeriod, setSelectedPeriod] = useState('2024');
   const [showRealisePartnersSidebar, setShowRealisePartnersSidebar] = useState(false);
 
@@ -1092,7 +1093,10 @@ const FinanceModern = () => {
                     <Card
                       key={client.id}
                       className="group relative overflow-hidden rounded-3xl bg-white border-0 shadow-lg hover:shadow-2xl hover:scale-[1.02] transition-all duration-500 cursor-pointer min-h-[520px] w-full"
-                      onClick={() => setSelectedClient(client.id)}
+                      onClick={() => {
+                        setSelectedClient(client.id);
+                        setShowClientDetail(true);
+                      }}
                     >
                       <div className={`absolute top-0 left-0 w-full h-1 ${
                         client.statut === 'suspect' ? 'bg-gradient-to-r from-red-400 to-pink-400' :
@@ -1502,6 +1506,396 @@ const FinanceModern = () => {
           </div>
         </SheetContent>
       </Sheet>
+
+      {/* Écran détaillé d'analyse client */}
+      <Dialog open={showClientDetail} onOpenChange={setShowClientDetail}>
+        <DialogContent className="max-w-6xl h-[90vh] overflow-hidden p-0">
+          {selectedClient && (() => {
+            const client = clientsAnalyzed.find(c => c.id === selectedClient);
+            if (!client) return null;
+
+            const diagnosticDetails = {
+              'dette_prestation': {
+                title: 'Analyse: Dette de Prestation Détectée',
+                icon: AlertCircle,
+                color: 'orange',
+                background: 'from-orange-50 to-red-50',
+                border: 'border-orange-200',
+                description: 'Le client a été facturé mais les prestations correspondantes n\'ont pas été entièrement réalisées.',
+                recommendations: [
+                  'Vérifier le planning et rattraper les heures manquantes',
+                  'Contacter le client pour planifier les prestations restantes',
+                  'Ajuster la facturation si nécessaire',
+                  'Mettre en place un suivi renforcé'
+                ],
+                risks: [
+                  'Insatisfaction client due à des prestations non réalisées',
+                  'Risque de litige ou de demande de remboursement',
+                  'Impact sur la relation commerciale',
+                  'Problème de trésorerie à terme'
+                ]
+              },
+              'sous_facturation': {
+                title: 'Analyse: Sous-Facturation Identifiée',
+                icon: TrendingDown,
+                color: 'red',
+                background: 'from-red-50 to-pink-50',
+                border: 'border-red-200',
+                description: 'Les heures prestées dépassent significativement la facturation émise.',
+                recommendations: [
+                  'Émettre une facturation complémentaire immédiatement',
+                  'Réviser les tarifs appliqués',
+                  'Améliorer le suivi temps/facturation',
+                  'Former l\'équipe sur le tracking des heures'
+                ],
+                risks: [
+                  'Perte de marge directe',
+                  'Déséquilibre financier du dossier',
+                  'Impact sur la rentabilité globale',
+                  'Mauvaise valorisation du temps'
+                ]
+              },
+              'rentabilite_faible': {
+                title: 'Analyse: Rentabilité Inférieure aux Standards',
+                icon: Euro,
+                color: 'purple',
+                background: 'from-purple-50 to-violet-50',
+                border: 'border-purple-200',
+                description: 'Le taux horaire effectif est en dessous du seuil de rentabilité fixé.',
+                recommendations: [
+                  'Réviser la structure tarifaire',
+                  'Optimiser l\'efficacité opérationnelle',
+                  'Négocier de nouveaux tarifs avec le client',
+                  'Évaluer la complexité réelle du dossier'
+                ],
+                risks: [
+                  'Rentabilité insuffisante du cabinet',
+                  'Difficultés à couvrir les coûts',
+                  'Impact sur la viabilité long terme',
+                  'Déséquilibre du portefeuille client'
+                ]
+              },
+              'equilibre': {
+                title: 'Analyse: Équilibre Financier Optimal',
+                icon: CheckCircle,
+                color: 'green',
+                background: 'from-green-50 to-emerald-50',
+                border: 'border-green-200',
+                description: 'Le client présente un bon équilibre entre facturation et prestations.',
+                recommendations: [
+                  'Maintenir la qualité de service actuelle',
+                  'Identifier les bonnes pratiques à répliquer',
+                  'Evaluer les opportunités d\'expansion',
+                  'Utiliser comme référence pour d\'autres clients'
+                ],
+                risks: []
+              }
+            };
+
+            const currentDiagnostic = diagnosticDetails[client.diagnostic?.type || 'equilibre'];
+            const Icon = currentDiagnostic.icon;
+
+            return (
+              <div className="h-full flex flex-col">
+                {/* Header fixe */}
+                <div className={`bg-gradient-to-r ${currentDiagnostic.background} p-6 border-b ${currentDiagnostic.border}`}>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-4">
+                      <div className={`p-3 bg-white rounded-2xl shadow-lg border-2 ${currentDiagnostic.border}`}>
+                        <Icon className={`w-8 h-8 text-${currentDiagnostic.color}-600`} />
+                      </div>
+                      <div>
+                        <h2 className="text-2xl font-bold text-gray-900">{client.nom}</h2>
+                        <p className="text-lg text-gray-700">{currentDiagnostic.title}</p>
+                        <div className="flex items-center space-x-2 mt-2">
+                          <Badge variant="outline" className={`border-${currentDiagnostic.color}-300 text-${currentDiagnostic.color}-700 bg-${currentDiagnostic.color}-50`}>
+                            {client.gestionnaire}
+                          </Badge>
+                          <Badge variant="outline" className={`border-${currentDiagnostic.color}-300 text-${currentDiagnostic.color}-700 bg-${currentDiagnostic.color}-50`}>
+                            {client.typeFacturation}
+                          </Badge>
+                        </div>
+                      </div>
+                    </div>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={() => setShowClientDetail(false)}
+                      className="bg-white/80 hover:bg-white"
+                    >
+                      ✕ Fermer
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Contenu scrollable */}
+                <div className="flex-1 overflow-y-auto p-6 space-y-8">
+                  {/* Métriques principales */}
+                  <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                    <Card>
+                      <CardContent className="p-6 text-center">
+                        <div className="text-3xl font-bold text-blue-600 mb-2">
+                          {(client.realiseADate.chiffreAffaires / 1000).toFixed(0)}K€
+                        </div>
+                        <div className="text-sm font-medium text-gray-700">Chiffre d'Affaires</div>
+                        <div className="text-xs text-gray-500 mt-1">Réalisé à date</div>
+                      </CardContent>
+                    </Card>
+
+                    <Card>
+                      <CardContent className="p-6 text-center">
+                        <div className="text-3xl font-bold text-green-600 mb-2">
+                          {client.realiseADate.heures}h
+                        </div>
+                        <div className="text-sm font-medium text-gray-700">Heures Prestées</div>
+                        <div className="text-xs text-gray-500 mt-1">Total cumulé</div>
+                      </CardContent>
+                    </Card>
+
+                    <Card>
+                      <CardContent className="p-6 text-center">
+                        <div className="text-3xl font-bold text-purple-600 mb-2">
+                          {(client.realiseADate.heures > 0 ? client.realiseADate.chiffreAffaires / client.realiseADate.heures : 0).toFixed(0)}€/h
+                        </div>
+                        <div className="text-sm font-medium text-gray-700">Taux Horaire</div>
+                        <div className="text-xs text-gray-500 mt-1">Effectif moyen</div>
+                      </CardContent>
+                    </Card>
+
+                    <Card>
+                      <CardContent className="p-6 text-center">
+                        <div className="text-3xl font-bold text-orange-600 mb-2">
+                          {client.realiseADate.pourcentageCA.toFixed(1)}%
+                        </div>
+                        <div className="text-sm font-medium text-gray-700">Avancement Budget</div>
+                        <div className="text-xs text-gray-500 mt-1">vs objectif annuel</div>
+                      </CardContent>
+                    </Card>
+                  </div>
+
+                  {/* Description du diagnostic */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center space-x-2">
+                        <Icon className={`w-5 h-5 text-${currentDiagnostic.color}-600`} />
+                        <span>Diagnostic Détaillé</span>
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-gray-700 leading-relaxed">{currentDiagnostic.description}</p>
+                      
+                      {client.diagnostic?.alerte && (
+                        <div className={`mt-4 p-4 bg-${currentDiagnostic.color}-50 border-l-4 border-${currentDiagnostic.color}-400 rounded-r-lg`}>
+                          <p className={`text-${currentDiagnostic.color}-800 font-medium`}>
+                            🔍 {client.diagnostic.alerte}
+                          </p>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+
+                  {/* Analyse comparative */}
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <Card>
+                      <CardHeader>
+                        <CardTitle>Évolution Temporelle</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="space-y-4">
+                          <div className="flex justify-between items-center">
+                            <span className="text-sm text-gray-600">CA Facturation:</span>
+                            <span className="font-medium">{client.realiseADate.pourcentageCA.toFixed(1)}%</span>
+                          </div>
+                          <Progress value={client.realiseADate.pourcentageCA} className="h-2" />
+                          
+                          <div className="flex justify-between items-center">
+                            <span className="text-sm text-gray-600">Heures Prestées:</span>
+                            <span className="font-medium">{client.realiseADate.pourcentageHeures.toFixed(1)}%</span>
+                          </div>
+                          <Progress value={client.realiseADate.pourcentageHeures} className="h-2" />
+
+                          <div className="pt-2 border-t">
+                            <div className="flex justify-between items-center">
+                              <span className="text-sm font-medium text-gray-700">Écart Factu/Prestation:</span>
+                              <span className={`font-bold ${
+                                (client.realiseADate.pourcentageCA - client.realiseADate.pourcentageHeures) > 15 ? 'text-orange-600' :
+                                (client.realiseADate.pourcentageCA - client.realiseADate.pourcentageHeures) < -15 ? 'text-red-600' :
+                                'text-green-600'
+                              }`}>
+                                {(client.realiseADate.pourcentageCA - client.realiseADate.pourcentageHeures).toFixed(1)}%
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    <Card>
+                      <CardHeader>
+                        <CardTitle>Objectifs vs Réalisations</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="space-y-4">
+                          <div>
+                            <div className="flex justify-between text-sm mb-1">
+                              <span>Objectif Économique:</span>
+                              <span className="font-medium">{(client.objectifAnnuel.economique / 1000).toFixed(0)}K€</span>
+                            </div>
+                            <div className="flex justify-between text-sm mb-2">
+                              <span>Réalisé:</span>
+                              <span className="font-medium">{(client.realiseADate.chiffreAffaires / 1000).toFixed(0)}K€</span>
+                            </div>
+                            <Progress value={client.realiseADate.pourcentageCA} className="h-2" />
+                          </div>
+                          
+                          <div className="pt-2 border-t">
+                            <div className="flex justify-between text-sm mb-1">
+                              <span>Objectif Horaire:</span>
+                              <span className="font-medium">{client.objectifAnnuel.heures}h</span>
+                            </div>
+                            <div className="flex justify-between text-sm mb-2">
+                              <span>Réalisé:</span>
+                              <span className="font-medium">{client.realiseADate.heures}h</span>
+                            </div>
+                            <Progress value={client.realiseADate.pourcentageHeures} className="h-2" />
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
+
+                  {/* Recommandations et risques */}
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="flex items-center space-x-2">
+                          <Target className="w-5 h-5 text-blue-600" />
+                          <span>Actions Recommandées</span>
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="space-y-3">
+                          {currentDiagnostic.recommendations.map((rec, index) => (
+                            <div key={index} className="flex items-start space-x-3">
+                              <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                                <span className="text-xs font-bold text-blue-600">{index + 1}</span>
+                              </div>
+                              <p className="text-sm text-gray-700">{rec}</p>
+                            </div>
+                          ))}
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    {currentDiagnostic.risks.length > 0 && (
+                      <Card>
+                        <CardHeader>
+                          <CardTitle className="flex items-center space-x-2">
+                            <AlertTriangle className="w-5 h-5 text-red-600" />
+                            <span>Risques Identifiés</span>
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="space-y-3">
+                            {currentDiagnostic.risks.map((risk, index) => (
+                              <div key={index} className="flex items-start space-x-3">
+                                <div className="w-6 h-6 bg-red-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                                  <AlertTriangle className="w-3 h-3 text-red-600" />
+                                </div>
+                                <p className="text-sm text-gray-700">{risk}</p>
+                              </div>
+                            ))}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    )}
+                  </div>
+
+                  {/* Actions rapides */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Actions Rapides</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        {client.justification?.status === 'neutralized' ? (
+                          <Button
+                            variant="outline"
+                            className="h-auto p-4 flex flex-col items-center space-y-2"
+                            onClick={() => {
+                              handleReactivateSuspicion(client);
+                              setShowClientDetail(false);
+                            }}
+                          >
+                            <RotateCcw className="w-6 h-6 text-orange-600" />
+                            <span className="text-sm font-medium">Réactiver Surveillance</span>
+                            <span className="text-xs text-gray-500">Remettre en surveillance active</span>
+                          </Button>
+                        ) : client.statut === 'suspect' && (
+                          <Button
+                            variant="outline"
+                            className="h-auto p-4 flex flex-col items-center space-y-2"
+                            onClick={() => {
+                              setJustificationDialog({open: true, client});
+                              setShowClientDetail(false);
+                            }}
+                          >
+                            <EyeOff className="w-6 h-6 text-yellow-600" />
+                            <span className="text-sm font-medium">Neutraliser Suspicion</span>
+                            <span className="text-xs text-gray-500">Justifier la situation</span>
+                          </Button>
+                        )}
+                        
+                        <Button
+                          variant="outline"
+                          className="h-auto p-4 flex flex-col items-center space-y-2"
+                        >
+                          <FileText className="w-6 h-6 text-blue-600" />
+                          <span className="text-sm font-medium">Générer Rapport</span>
+                          <span className="text-xs text-gray-500">Export PDF détaillé</span>
+                        </Button>
+                        
+                        <Button
+                          variant="outline"
+                          className="h-auto p-4 flex flex-col items-center space-y-2"
+                        >
+                          <Calendar className="w-6 h-6 text-green-600" />
+                          <span className="text-sm font-medium">Planifier Suivi</span>
+                          <span className="text-xs text-gray-500">Programmer une révision</span>
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Historique des règles (si disponible) */}
+                  {client.analysis.ruleTriggered && (
+                    <Card>
+                      <CardHeader>
+                        <CardTitle>Détail de la Règle Déclenchée</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="bg-gray-50 p-4 rounded-lg">
+                          <h4 className="font-medium text-gray-900 mb-2">{client.analysis.ruleTriggered.nom}</h4>
+                          <p className="text-sm text-gray-700 mb-3">{client.analysis.ruleTriggered.description}</p>
+                          <div className="flex items-center space-x-4 text-xs text-gray-500">
+                            <span>Condition: {client.analysis.ruleTriggered.condition}</span>
+                            <Badge variant={
+                              client.analysis.ruleTriggered.gravite === 'high' ? 'destructive' :
+                              client.analysis.ruleTriggered.gravite === 'medium' ? 'default' : 'secondary'
+                            }>
+                              {client.analysis.ruleTriggered.gravite}
+                            </Badge>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )}
+                </div>
+              </div>
+            );
+          })()}
+        </DialogContent>
+      </Dialog>
       </div>
     </DashboardLayout>
   );
