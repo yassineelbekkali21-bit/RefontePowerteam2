@@ -51,6 +51,9 @@ const ClientDetailPage: React.FC = () => {
   const [showCorrectionPlanModal, setShowCorrectionPlanModal] = useState(false);
   const [showPackageRevisionModal, setShowPackageRevisionModal] = useState(false);
   
+  // État pour l'onglet actuel du client detail
+  const [currentTab, setCurrentTab] = useState<'overview' | 'historique' | 'prestations'>('overview');
+  
   // Trouver le client par ID
   const client = mockClients.find(c => c.id === id);
   
@@ -78,6 +81,10 @@ const ClientDetailPage: React.FC = () => {
     setShowPackageRevisionModal(true);
   };
   
+  const handleNavigateToHistory = () => {
+    setCurrentTab('historique');
+  };
+  
   return (
     <>
       <ClientDetailFinal
@@ -87,6 +94,7 @@ const ClientDetailPage: React.FC = () => {
         onBudgetModalOpen={handleBudgetModalOpen}
         onCorrectionPlanModalOpen={handleCorrectionPlanModalOpen}
         onPackageRevisionModalOpen={handlePackageRevisionModalOpen}
+        initialTab={currentTab}
       />
       
       {/* Modales */}
@@ -113,6 +121,7 @@ const ClientDetailPage: React.FC = () => {
         onClose={() => setShowPackageRevisionModal(false)}
         client={client}
         onOpenBudgetModal={handleBudgetModalOpen}
+        onNavigateToHistory={handleNavigateToHistory}
       />
     </>
   );

@@ -21,6 +21,7 @@ interface PackageRevisionModalProps {
   onClose: () => void;
   client?: any;
   onOpenBudgetModal?: () => void;
+  onNavigateToHistory?: () => void;
 }
 
 interface RevisionHistory {
@@ -59,7 +60,7 @@ const mockPrestationData = {
   2024: { creationMiseAJourDossier: '0h 0m', productionBudget: '0h 0m', scanEtAdmin: '4h 34m', organisationComptable: '0h 0m', encodageComptable: '1h 40m', prestationsTVA: '3h 45m', nettoyageVerificationComptabilite: '1h 30m', productionSituationIntermediaire: '0h 0m', productionBilan: '14h 0m', prestationsFiscales: '3h 9m' }
 };
 
-export const PackageRevisionModal: React.FC<PackageRevisionModalProps> = ({ isOpen, onClose, client, onOpenBudgetModal }) => {
+export const PackageRevisionModal: React.FC<PackageRevisionModalProps> = ({ isOpen, onClose, client, onOpenBudgetModal, onNavigateToHistory }) => {
   const [activeSection, setActiveSection] = useState('analysis');
   const [revisionDecision, setRevisionDecision] = useState<'none' | 'maintain' | 'increase'>('none');
   const [newAmount, setNewAmount] = useState('');
@@ -78,6 +79,13 @@ export const PackageRevisionModal: React.FC<PackageRevisionModalProps> = ({ isOp
       // Par exemple : envoyer les données au backend, mettre à jour l'état, etc.
       alert(`Proposition créée : augmentation de ${currentAmount}€ à ${newAmount}€`);
       onClose();
+      
+      // Navigation vers l'onglet historique
+      if (onNavigateToHistory) {
+        setTimeout(() => {
+          onNavigateToHistory();
+        }, 100);
+      }
     }
   };
 

@@ -58,6 +58,7 @@ interface ClientDetailFinalProps {
   onBudgetModalOpen?: () => void;
   onCorrectionPlanModalOpen?: () => void;
   onPackageRevisionModalOpen?: () => void;
+  initialTab?: 'overview' | 'historique' | 'prestations';
 }
 
 const ClientDetailFinal: React.FC<ClientDetailFinalProps> = ({ 
@@ -66,12 +67,14 @@ const ClientDetailFinal: React.FC<ClientDetailFinalProps> = ({
   onSettingsModalOpen,
   onBudgetModalOpen,
   onCorrectionPlanModalOpen,
-  onPackageRevisionModalOpen
+  onPackageRevisionModalOpen,
+  initialTab = 'overview'
 }) => {
   const { getPlansByClient } = usePlans();
   
   // Récupérer les plans de correction liés à ce client
   const clientPlans = getPlansByClient(client.name);
+  const [activeMainTab, setActiveMainTab] = useState<'overview' | 'historique' | 'prestations'>(initialTab);
   const [activeTab, setActiveTab] = useState<'categorie' | 'collaborateur' | 'entite'>('categorie');
   const { toast } = useToast();
   
@@ -169,6 +172,47 @@ const ClientDetailFinal: React.FC<ClientDetailFinalProps> = ({
         
       </div>
 
+      {/* Navigation par onglets */}
+      <div className="mb-6">
+        <div className="border-b border-gray-200">
+          <nav className="-mb-px flex space-x-8">
+            <button
+              onClick={() => setActiveMainTab('overview')}
+              className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
+                activeMainTab === 'overview'
+                  ? 'border-blue-500 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
+            >
+              Vue d'ensemble
+            </button>
+            <button
+              onClick={() => setActiveMainTab('historique')}
+              className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
+                activeMainTab === 'historique'
+                  ? 'border-blue-500 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
+            >
+              Historique
+            </button>
+            <button
+              onClick={() => setActiveMainTab('prestations')}
+              className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
+                activeMainTab === 'prestations'
+                  ? 'border-blue-500 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
+            >
+              Prestations détaillées
+            </button>
+          </nav>
+        </div>
+      </div>
+
+      {/* Contenu des onglets */}
+      {activeMainTab === 'overview' && (
+      <div>
       {/* Structure exacte demandée */}
       <div className="grid grid-cols-12 gap-6">
         {/* Colonne 1 - Informations client + Actions rapides + Encours */}
@@ -318,7 +362,12 @@ const ClientDetailFinal: React.FC<ClientDetailFinalProps> = ({
                     <TrendingUp className="w-3 h-3 mr-1.5" />
                     Gestion Budget
                   </Button>
-                  <Button size="sm" variant="outline" className="w-full justify-start text-xs h-8 hover:shadow-sm transition-all duration-200">
+                  <Button 
+                    size="sm" 
+                    variant="outline" 
+                    className="w-full justify-start text-xs h-8 hover:shadow-sm transition-all duration-200"
+                    onClick={() => setActiveMainTab('historique')}
+                  >
                     <History className="w-3 h-3 mr-1.5" />
                     Historique
                   </Button>
@@ -348,10 +397,7 @@ const ClientDetailFinal: React.FC<ClientDetailFinalProps> = ({
                         </div>
                       </DropdownMenuItem>
                       <DropdownMenuItem 
-                        onClick={() => {
-                          // TODO: Implémenter l'ouverture du plan normal
-                          console.log('Plan Normal');
-                        }}
+                        onClick={onCorrectionPlanModalOpen}
                         className="cursor-pointer"
                       >
                         <FileText className="w-4 h-4 mr-2 text-blue-600" />
@@ -1126,7 +1172,7 @@ const ClientDetailFinal: React.FC<ClientDetailFinalProps> = ({
 
         {/* Section Plans de Correction */}
         {clientPlans.length > 0 && (
-          <div className="col-span-12 mt-6">
+          <div className="col-span-9 col-start-4 mt-6">
             <Card className="bg-gradient-to-br from-orange-50 to-red-50 border-0 shadow-lg">
               <CardHeader className="pb-4">
                 <div className="flex items-center justify-between">
@@ -1231,6 +1277,119 @@ const ClientDetailFinal: React.FC<ClientDetailFinalProps> = ({
           </div>
         )}
       </div>
+      </div>
+      )}
+
+      {/* Onglet Historique */}
+      {activeMainTab === 'historique' && (
+        <div className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center">
+                <History className="w-5 h-5 mr-2" />
+                Historique des Forfaits
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="border rounded-lg p-4 bg-green-50 border-green-200">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center space-x-3">
+                      <Badge className="bg-green-100 text-green-700">Acceptée</Badge>
+                      <span className="font-medium">Augmentation 2200€ → 2500€</span>
+                    </div>
+                    <span className="text-sm text-gray-500">15/01/2025</span>
+                  </div>
+                  <p className="text-sm text-gray-600">Augmentation volumétrie documents</p>
+                  <p className="text-xs text-gray-500 mt-1">Auteur: Marie Dubois</p>
+                </div>
+                
+                <div className="border rounded-lg p-4 bg-blue-50 border-blue-200">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center space-x-3">
+                      <Badge className="bg-blue-100 text-blue-700">En attente</Badge>
+                      <span className="font-medium">Proposition 2500€ → 2850€</span>
+                    </div>
+                    <span className="text-sm text-gray-500">Aujourd'hui</span>
+                  </div>
+                  <p className="text-sm text-gray-600">Justification basée sur double problématique: rentabilité critique + explosion volumétrie</p>
+                  <p className="text-xs text-gray-500 mt-1">Auteur: Système automatique</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center">
+                <FileText className="w-5 h-5 mr-2" />
+                Historique des Plans de Correction
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {clientPlans.length > 0 ? (
+                <div className="space-y-4">
+                  {clientPlans.map((plan) => (
+                    <div key={plan.id} className="border rounded-lg p-4 hover:bg-gray-50 transition-colors">
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center space-x-3">
+                          <Badge className={
+                            plan.status === 'done' ? 'bg-green-100 text-green-700' :
+                            plan.status === 'inprogress' ? 'bg-blue-100 text-blue-700' :
+                            plan.status === 'validation' ? 'bg-orange-100 text-orange-700' :
+                            'bg-gray-100 text-gray-700'
+                          }>
+                            {plan.status === 'done' ? 'Terminé' :
+                             plan.status === 'inprogress' ? 'En cours' :
+                             plan.status === 'validation' ? 'Validation' : 'À faire'}
+                          </Badge>
+                          <span className="font-medium">{plan.title}</span>
+                        </div>
+                        <span className="text-sm text-gray-500">Créé le {plan.createdDate}</span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <p className="text-sm text-gray-600">{plan.description}</p>
+                        <div className="text-right">
+                          <p className="text-sm font-medium">Responsable: {plan.assignee}</p>
+                          <p className="text-xs text-gray-500">Échéance: {plan.deadline}</p>
+                        </div>
+                      </div>
+                      {plan.status !== 'done' && (
+                        <div className="mt-3">
+                          <div className="flex items-center justify-between text-sm mb-1">
+                            <span className="text-gray-600">Progression</span>
+                            <span className="font-medium">{plan.progress}%</span>
+                          </div>
+                          <Progress value={plan.progress} className="h-2" />
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-gray-500 text-center py-8">Aucun plan de correction créé pour ce client</p>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {/* Onglet Prestations détaillées */}
+      {activeMainTab === 'prestations' && (
+        <div className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center">
+                <BarChart3 className="w-5 h-5 mr-2" />
+                Prestations Détaillées
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-gray-500 text-center py-8">Contenu détaillé des prestations à implémenter</p>
+            </CardContent>
+          </Card>
+        </div>
+      )}
     </div>
   );
 };
