@@ -899,7 +899,11 @@ const FinanceModern = () => {
                           variant={selectedFilters.statut === 'suspects' ? 'default' : 'outline'}
                           size="sm"
                           className={`${selectedFilters.statut === 'suspects' ? 'bg-red-500 hover:bg-red-600' : 'hover:bg-red-50'} transition-all duration-200`}
-                          onClick={() => setSelectedFilters(prev => ({...prev, statut: prev.statut === 'suspects' ? 'tous' : 'suspects'}))}
+                          onClick={() => setSelectedFilters(prev => ({
+                            ...prev, 
+                            statut: prev.statut === 'suspects' ? 'tous' : 'suspects',
+                            diagnostic: 'tous' // Réinitialiser le filtre diagnostic
+                          }))}
                         >
                           <AlertTriangle className="w-4 h-4 mr-2" />
                           Suspects
@@ -911,7 +915,11 @@ const FinanceModern = () => {
                           variant={selectedFilters.statut === 'attention' ? 'default' : 'outline'}
                           size="sm"
                           className={`${selectedFilters.statut === 'attention' ? 'bg-orange-500 hover:bg-orange-600' : 'hover:bg-orange-50'} transition-all duration-200`}
-                          onClick={() => setSelectedFilters(prev => ({...prev, statut: prev.statut === 'attention' ? 'tous' : 'attention'}))}
+                          onClick={() => setSelectedFilters(prev => ({
+                            ...prev, 
+                            statut: prev.statut === 'attention' ? 'tous' : 'attention',
+                            diagnostic: 'tous'
+                          }))}
                         >
                           <AlertTriangle className="w-4 h-4 mr-2" />
                           À surveiller
@@ -923,7 +931,11 @@ const FinanceModern = () => {
                           variant={selectedFilters.statut === 'neutralises' ? 'default' : 'outline'}
                           size="sm"
                           className={`${selectedFilters.statut === 'neutralises' ? 'bg-yellow-500 hover:bg-yellow-600' : 'hover:bg-yellow-50'} transition-all duration-200`}
-                          onClick={() => setSelectedFilters(prev => ({...prev, statut: prev.statut === 'neutralises' ? 'tous' : 'neutralises'}))}
+                          onClick={() => setSelectedFilters(prev => ({
+                            ...prev, 
+                            statut: prev.statut === 'neutralises' ? 'tous' : 'neutralises',
+                            diagnostic: 'tous'
+                          }))}
                         >
                           <Filter className="w-4 h-4 mr-2" />
                           Neutralisés
@@ -935,7 +947,11 @@ const FinanceModern = () => {
                           variant={selectedFilters.statut === 'sains' ? 'default' : 'outline'}
                           size="sm"
                           className={`${selectedFilters.statut === 'sains' ? 'bg-green-500 hover:bg-green-600' : 'hover:bg-green-50'} transition-all duration-200`}
-                          onClick={() => setSelectedFilters(prev => ({...prev, statut: prev.statut === 'sains' ? 'tous' : 'sains'}))}
+                          onClick={() => setSelectedFilters(prev => ({
+                            ...prev, 
+                            statut: prev.statut === 'sains' ? 'tous' : 'sains',
+                            diagnostic: 'tous'
+                          }))}
                         >
                           <CheckCircle className="w-4 h-4 mr-2" />
                           Sains
@@ -961,11 +977,19 @@ const FinanceModern = () => {
                       <p className="text-xs font-medium text-gray-600 mb-2">Diagnostics contextuels:</p>
                         <div className="flex flex-wrap gap-2">
                           {[
-                            { key: 'dette_prestation', label: 'Dette prestation', icon: AlertCircle, color: 'orange' },
-                            { key: 'sous_facturation', label: 'Sous-facturation', icon: TrendingDown, color: 'red' },
-                            { key: 'rentabilite_faible', label: 'Rentabilité faible', icon: Euro, color: 'red' },
-                            { key: 'equilibre', label: 'Équilibre', icon: CheckCircle, color: 'green' }
-                          ].map((diagnostic) => {
+                            { key: 'dette_prestation', label: 'Dette prestation', icon: AlertCircle, color: 'orange', statut: 'attention' },
+                            { key: 'sous_facturation', label: 'Sous-facturation', icon: TrendingDown, color: 'red', statut: 'suspect' },
+                            { key: 'rentabilite_faible', label: 'Rentabilité faible', icon: Euro, color: 'red', statut: 'suspect' },
+                            { key: 'equilibre', label: 'Équilibre', icon: CheckCircle, color: 'green', statut: 'sain' }
+                          ].filter((diagnostic) => {
+                            // Filtrer les diagnostics selon le statut sélectionné
+                            if (selectedFilters.statut === 'tous') return true;
+                            if (selectedFilters.statut === 'suspects') return diagnostic.statut === 'suspect';
+                            if (selectedFilters.statut === 'attention') return diagnostic.statut === 'attention';
+                            if (selectedFilters.statut === 'sains') return diagnostic.statut === 'sain';
+                            if (selectedFilters.statut === 'neutralises') return true; // Tous diagnostics possibles pour neutralisés
+                            return true;
+                          }).map((diagnostic) => {
                             const count = clientsAnalyzed.filter(c => c.diagnostic?.type === diagnostic.key).length;
                             const Icon = diagnostic.icon;
                             return (
