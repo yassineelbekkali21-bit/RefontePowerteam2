@@ -1637,7 +1637,7 @@ const FinanceModern = () => {
 
       {/* Écran détaillé d'analyse client */}
       <Dialog open={showClientDetail} onOpenChange={setShowClientDetail}>
-        <DialogContent className="max-w-6xl h-[90vh] overflow-hidden p-0">
+        <DialogContent className="max-w-6xl max-h-[90vh] overflow-hidden p-0">
           {selectedClient && (() => {
             const client = clientsAnalyzed.find(c => c.id === selectedClient);
             if (!client) return null;
@@ -1777,7 +1777,7 @@ const FinanceModern = () => {
                 </div>
 
                 {/* Contenu scrollable */}
-                <div className="flex-1 overflow-y-auto p-6 space-y-8">
+                <div className="flex-1 overflow-y-auto p-6 space-y-8 max-h-[calc(90vh-120px)]">
                   {/* Métriques principales */}
                   <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                     <Card>
