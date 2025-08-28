@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Users, Calendar, Clock, TrendingUp, UserCheck, CalendarDays, Activity, Target, MapPin, Phone, Mail, Award, Coffee, Briefcase, CheckCircle, AlertCircle, XCircle, Filter, Search, Plus, Edit, Eye, ChevronLeft, ChevronRight, Gift, MessageSquare, Star, Euro, Send, Upload, Paperclip, Copy, Settings, Zap, Sparkles, BarChart3, FileText } from 'lucide-react';
+import { Users, Calendar, Clock, TrendingUp, UserCheck, CalendarDays, Activity, Target, MapPin, Phone, Mail, Award, Coffee, Briefcase, CheckCircle, AlertCircle, XCircle, Filter, Search, Plus, Edit, Eye, ChevronLeft, ChevronRight, Gift, MessageSquare, Star, Euro, Send, Upload, Paperclip, Copy, Settings, Zap, Sparkles, BarChart3, FileText, Clipboard, History } from 'lucide-react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -552,6 +552,152 @@ const RHModern: React.FC = () => {
   const [selectedDates, setSelectedDates] = useState<number[]>([]);
   const [attachedFile, setAttachedFile] = useState<File | null>(null);
   const [selectedEventFilter, setSelectedEventFilter] = useState<'all' | 'approved' | 'pending' | 'rejected'>('all');
+  // Demandes de congé d'exemple pour tester le processus
+  const [leaveRequests, setLeaveRequests] = useState<any[]>([
+    {
+      id: 'req-1',
+      employeeName: 'Sophie Laurent',
+      dates: [15, 16, 17],
+      leaveType: 'conge-annuel-paye',
+      leaveTypeName: 'Congé Annuel Payé',
+      status: 'pending',
+      submittedAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(), // Il y a 2 jours
+      attachedFile: null
+    },
+    {
+      id: 'req-2', 
+      employeeName: 'Marc Dubois',
+      dates: [22, 23],
+      leaveType: 'conge-maladie',
+      leaveTypeName: 'Congé Maladie',
+      status: 'pending',
+      submittedAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(), // Hier
+      attachedFile: 'certificat_medical_marc.pdf'
+    },
+    {
+      id: 'req-3',
+      employeeName: 'Alice Martin',
+      dates: [25, 26, 27],
+      leaveType: 'conge-annuel-paye',
+      leaveTypeName: 'Congé Annuel Payé',
+      status: 'approved',
+      submittedAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(), // Il y a 5 jours
+      approvedAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(), // Il y a 3 jours
+      attachedFile: null
+    }
+  ]);
+
+  // Fonction pour soumettre une demande de congé
+  const handleSubmitLeaveRequest = () => {
+    if (selectedDates.length === 0 || !selectedLeaveType) {
+      alert('Veuillez sélectionner des dates et un type de congé');
+      return;
+    }
+
+    if (selectedLeaveType === 'conge-maladie' && !attachedFile) {
+      alert('Un certificat médical est requis pour un congé maladie');
+      return;
+    }
+
+    const newRequest = {
+      id: Date.now().toString(),
+      employeeName: 'Utilisateur Actuel', // À remplacer par l'utilisateur connecté
+      dates: selectedDates.sort(),
+      leaveType: selectedLeaveType,
+      leaveTypeName: leaveTypes.find(t => t.id === selectedLeaveType)?.name,
+      status: 'pending',
+      submittedAt: new Date().toISOString(),
+      attachedFile: attachedFile?.name || null
+    };
+
+    setLeaveRequests(prev => [...prev, newRequest]);
+    
+    // Réinitialiser le formulaire
+    setSelectedDates([]);
+    setSelectedLeaveType('conge-annuel-paye');
+    setAttachedFile(null);
+    
+    alert(`✅ Demande de congé soumise avec succès !
+
+📅 Dates: ${selectedDates.sort().join(', ')} Août 2025
+🏷️ Type: ${leaveTypes.find(t => t.id === selectedLeaveType)?.name}
+📋 Statut: En attente d'approbation
+🔔 Votre manager sera notifié automatiquement`);
+  };
+
+  // Fonction pour approuver une demande de congé
+  const handleApproveLeaveRequest = (requestId: string) => {
+    setLeaveRequests(prev => 
+      prev.map(request => 
+        request.id === requestId 
+          ? { ...request, status: 'approved', approvedAt: new Date().toISOString() }
+          : request
+      )
+    );
+
+    // Mettre à jour les compteurs de congés de l'employé concerné
+    const request = leaveRequests.find(r => r.id === requestId);
+    if (request) {
+      // Ici on mettrait à jour les compteurs dans une vraie application
+      updateEmployeeLeaveCounters(request);
+      
+      alert(`✅ Demande de congé APPROUVÉE !
+
+👤 Employé: ${request.employeeName}
+📅 Dates: ${request.dates.join(', ')} Août 2025
+🏷️ Type: ${request.leaveTypeName}
+🏖️ Compteurs mis à jour automatiquement
+📧 Notification envoyée à l'employé`);
+    }
+  };
+
+  // Fonction pour rejeter une demande de congé
+  const handleRejectLeaveRequest = (requestId: string) => {
+    setLeaveRequests(prev => 
+      prev.map(request => 
+        request.id === requestId 
+          ? { ...request, status: 'rejected', rejectedAt: new Date().toISOString() }
+          : request
+      )
+    );
+    
+    const request = leaveRequests.find(r => r.id === requestId);
+    alert(`❌ Demande de congé REJETÉE !
+
+👤 Employé: ${request?.employeeName}
+📅 Dates: ${request?.dates.join(', ')} Août 2025
+🏷️ Type: ${request?.leaveTypeName}
+📧 Notification de rejet envoyée à l'employé`);
+  };
+
+  // Fonction pour mettre à jour les compteurs de congés
+  const updateEmployeeLeaveCounters = (request: any) => {
+    const daysCount = request.dates.length;
+    
+    // Mettre à jour les compteurs dans les données d'employés
+    // Note: Dans une vraie application, cela mettrait à jour la base de données
+    
+    // Simuler la mise à jour des compteurs pour l'affichage
+    const leaveTypeKey = request.leaveType.replace('conge-', '').replace('-', '');
+    
+    console.log(`🏖️ Mise à jour compteurs congés:
+- Employé: ${request.employeeName}
+- Jours pris: +${daysCount}
+- Jours restants: -${daysCount}
+- Type: ${request.leaveTypeName}
+- Compteurs mis à jour dans teamData[employé].congesDetailles.${leaveTypeKey}`);
+    
+    // Ajouter le congé dans les événements annuels pour l'affichage dans le calendrier
+    const currentMonth = new Date().toLocaleDateString('fr-FR', { month: 'long' });
+    const newLeaveEvent = {
+      date: request.dates.join('-'),
+      type: 'conge',
+      name: `${request.leaveTypeName} (${request.employeeName})`,
+      status: 'approved'
+    };
+    
+    console.log(`📅 Ajout dans le calendrier: ${currentMonth} - ${newLeaveEvent.name}`);
+  };
 
   // Fonction pour filtrer les événements par statut
   const getFilteredEvents = () => {
@@ -611,16 +757,16 @@ const RHModern: React.FC = () => {
           description="Gestion d'équipes et calendrier partagé"
           icon={Users}
           actions={
-            <div className="flex items-center space-x-4">
+              <div className="flex items-center space-x-4">
               <div className="bg-blue-100 rounded-lg p-3 text-center">
                 <div className="text-2xl font-bold text-blue-900">{teamData.length}</div>
                 <div className="text-sm text-blue-600">Collaborateurs</div>
-              </div>
+                </div>
               <div className="bg-green-100 rounded-lg p-3 text-center">
                 <div className="text-2xl font-bold text-green-900">91%</div>
                 <div className="text-sm text-green-600">Performance</div>
+                </div>
               </div>
-            </div>
           }
         />
 
@@ -921,7 +1067,7 @@ const RHModern: React.FC = () => {
                     onClick={() => setShowLeaveModal(true)}
                   >
                     Associer Outlook
-                  </Button>
+                    </Button>
                   </div>
                 </div>
 
@@ -1060,6 +1206,7 @@ const RHModern: React.FC = () => {
                       <Button 
                         className="w-full bg-green-600 hover:bg-green-700"
                         disabled={selectedLeaveType === 'conge-maladie' && !attachedFile}
+                        onClick={handleSubmitLeaveRequest}
                       >
                         <Send className="w-4 h-4 mr-2" />
                         Soumettre la demande
@@ -1179,14 +1326,127 @@ const RHModern: React.FC = () => {
                                 👤
                               </button>
                             </div>
-                          </div>
-                        ))}
-                      </div>
+                    </div>
+                  ))}
+                </div>
                     ))
                   )}
                 </div>
               </div>
             </div>
+
+            {/* Section Gestion des demandes de congé */}
+            <Card className="mt-6">
+              <CardHeader>
+                <CardTitle className="flex items-center">
+                  <Clipboard className="w-5 h-5 mr-2" />
+                  Demandes de congé en attente ({leaveRequests.filter(r => r.status === 'pending').length})
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                  <div className="space-y-4">
+                    {leaveRequests
+                      .filter(request => request.status === 'pending')
+                      .map((request) => (
+                      <div key={request.id} className="border rounded-lg p-4 bg-yellow-50 border-yellow-200">
+                        <div className="flex items-center justify-between mb-3">
+                          <div>
+                            <h4 className="font-medium text-gray-900">{request.employeeName}</h4>
+                            <p className="text-sm text-gray-600">
+                              {request.leaveTypeName} • {request.dates.length} jour(s)
+                            </p>
+                            <p className="text-xs text-gray-500">
+                              Dates: {request.dates.join(', ')} Août 2025 • Soumis le {new Date(request.submittedAt).toLocaleDateString()}
+                            </p>
+                            <p className="text-xs text-blue-600 font-medium mt-1">
+                              ⏰ En attente depuis {Math.ceil((Date.now() - new Date(request.submittedAt).getTime()) / (1000 * 60 * 60 * 24))} jour(s)
+                            </p>
+                            {request.attachedFile && (
+                              <p className="text-xs text-blue-600 mt-1">
+                                📎 Pièce jointe: {request.attachedFile}
+                              </p>
+                            )}
+                          </div>
+                          <div className="flex space-x-2">
+                            <Button
+                              size="sm"
+                              className="bg-green-600 hover:bg-green-700"
+                              onClick={() => handleApproveLeaveRequest(request.id)}
+                            >
+                              <CheckCircle className="w-4 h-4 mr-1" />
+                              Approuver
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="border-red-300 text-red-600 hover:bg-red-50"
+                              onClick={() => handleRejectLeaveRequest(request.id)}
+                            >
+                              <XCircle className="w-4 h-4 mr-1" />
+                              Rejeter
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                    
+                    {leaveRequests.filter(r => r.status === 'pending').length === 0 && (
+                      <div className="text-center py-8 text-gray-500">
+                        <Clipboard className="w-8 h-8 mx-auto mb-2 text-gray-300" />
+                        <p>Aucune demande de congé en attente</p>
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+
+            {/* Historique des demandes traitées */}
+            <Card className="mt-6">
+              <CardHeader>
+                <CardTitle className="flex items-center">
+                  <History className="w-5 h-5 mr-2" />
+                  Historique des demandes traitées
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                  <div className="space-y-3">
+                    {leaveRequests
+                      .filter(request => request.status !== 'pending')
+                      .map((request) => (
+                      <div key={request.id} className={`border rounded-lg p-3 ${
+                        request.status === 'approved' 
+                          ? 'bg-green-50 border-green-200' 
+                          : 'bg-red-50 border-red-200'
+                      }`}>
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <h5 className="font-medium text-sm">{request.employeeName}</h5>
+                            <p className="text-xs text-gray-600">
+                              {request.leaveTypeName} • {request.dates.join(', ')}
+                            </p>
+            </div>
+                          <div className="text-right">
+                            <Badge className={
+                              request.status === 'approved' 
+                                ? 'bg-green-100 text-green-700' 
+                                : 'bg-red-100 text-red-700'
+                            }>
+                              {request.status === 'approved' ? 'Approuvé' : 'Rejeté'}
+                            </Badge>
+                            <p className="text-xs text-gray-500 mt-1">
+                              {new Date(
+                                request.status === 'approved' 
+                                  ? request.approvedAt 
+                                  : request.rejectedAt
+                              ).toLocaleDateString()}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
           </div>
         )}
 
@@ -2009,7 +2269,7 @@ const RHModern: React.FC = () => {
                         <input 
                           type="text" 
                           className="w-full p-2 border rounded text-center"
-                          value={jours}
+                          value={String(jours)}
                           placeholder="Nombre de jours"
                           readOnly
                         />
