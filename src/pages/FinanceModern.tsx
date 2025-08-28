@@ -179,19 +179,27 @@ const FinanceModern = () => {
         };
       }
 
-      // Déterminer le statut final basé sur la logique métier (4 statuts uniquement)
+      // Déterminer le statut final basé DIRECTEMENT sur le diagnostic
       let statutFinal;
       if (justification?.status === 'neutralized') {
         statutFinal = 'neutralized';
-      } else if (analysis.isSuspect || displayDiagnostic.urgence === 'high') {
-        // Suspects: Rentabilité faible + Sous-facturation + règles de suspicion
-        statutFinal = 'suspect';
-      } else if (displayDiagnostic.urgence === 'medium') {
-        // À surveiller: Dette prestation
-        statutFinal = 'attention';
       } else {
-        // Sains: Équilibre
-        statutFinal = 'sain';
+        // Le statut est déterminé par le type de diagnostic
+        switch (displayDiagnostic.type) {
+          case 'dette_prestation':
+            statutFinal = 'attention'; // À surveiller
+            break;
+          case 'sous_facturation':
+          case 'rentabilite_faible':
+            statutFinal = 'suspect'; // Suspects
+            break;
+          case 'equilibre':
+            statutFinal = 'sain'; // Sains
+            break;
+          default:
+            // Fallback sur les règles de suspicion existantes
+            statutFinal = analysis.isSuspect ? 'suspect' : 'sain';
+        }
       }
 
       return {
