@@ -179,16 +179,14 @@ const FinanceModern = () => {
         };
       }
 
-      // Déterminer le statut final basé sur la logique métier
+      // Déterminer le statut final basé sur la logique métier (4 statuts uniquement)
       let statutFinal;
       if (justification?.status === 'neutralized') {
         statutFinal = 'neutralized';
       } else if (analysis.isSuspect) {
         statutFinal = 'suspect';
-      } else if (displayDiagnostic.urgence === 'high' || tarifHoraireReel < 75) {
-        statutFinal = 'attention';
-      } else if (displayDiagnostic.urgence === 'medium' || tarifHoraireReel < 90) {
-        statutFinal = 'surveillance';
+      } else if (displayDiagnostic.urgence === 'high' || displayDiagnostic.urgence === 'medium' || tarifHoraireReel < 85) {
+        statutFinal = 'attention'; // À surveiller
       } else {
         statutFinal = 'sain';
       }
@@ -215,7 +213,6 @@ const FinanceModern = () => {
       const matchStatut = selectedFilters.statut === 'tous' || 
                          (selectedFilters.statut === 'suspects' && client.statut === 'suspect') ||
                          (selectedFilters.statut === 'attention' && client.statut === 'attention') ||
-                         (selectedFilters.statut === 'surveillance' && client.statut === 'surveillance') ||
                          (selectedFilters.statut === 'neutralises' && client.statut === 'neutralized') ||
                          (selectedFilters.statut === 'sains' && client.statut === 'sain');
       
@@ -906,21 +903,9 @@ const FinanceModern = () => {
                           onClick={() => setSelectedFilters(prev => ({...prev, statut: prev.statut === 'attention' ? 'tous' : 'attention'}))}
                         >
                           <AlertTriangle className="w-4 h-4 mr-2" />
-                          Attention
+                          À surveiller
                           <span className="ml-2 text-xs bg-white/20 px-2 py-1 rounded-full">
                             {clientsAnalyzed.filter(c => c.statut === 'attention' && !c.justification).length}
-                          </span>
-                        </Button>
-                        <Button 
-                          variant={selectedFilters.statut === 'surveillance' ? 'default' : 'outline'}
-                          size="sm"
-                          className={`${selectedFilters.statut === 'surveillance' ? 'bg-blue-500 hover:bg-blue-600' : 'hover:bg-blue-50'} transition-all duration-200`}
-                          onClick={() => setSelectedFilters(prev => ({...prev, statut: prev.statut === 'surveillance' ? 'tous' : 'surveillance'}))}
-                        >
-                          <Eye className="w-4 h-4 mr-2" />
-                          Surveillance
-                          <span className="ml-2 text-xs bg-white/20 px-2 py-1 rounded-full">
-                            {clientsAnalyzed.filter(c => c.statut === 'surveillance' && !c.justification).length}
                           </span>
                         </Button>
                         <Button 
@@ -1132,18 +1117,9 @@ const FinanceModern = () => {
                             gradient: 'from-orange-500/20 via-amber-500/10 to-orange-400/20',
                             border: 'border-orange-200/50',
                             glow: 'shadow-orange-500/20',
-                            label: 'Attention',
+                            label: 'À surveiller',
                             labelColor: 'bg-orange-100 text-orange-700 border-orange-200',
                             accentColor: 'orange'
-                          };
-                        case 'surveillance':
-                          return {
-                            gradient: 'from-blue-500/20 via-cyan-500/10 to-blue-400/20',
-                            border: 'border-blue-200/50',
-                            glow: 'shadow-blue-500/20',
-                            label: 'Surveillance',
-                            labelColor: 'bg-blue-100 text-blue-700 border-blue-200',
-                            accentColor: 'blue'
                           };
                         case 'neutralized':
                           return {
@@ -1154,7 +1130,7 @@ const FinanceModern = () => {
                             labelColor: 'bg-yellow-100 text-yellow-700 border-yellow-200',
                             accentColor: 'yellow'
                           };
-                        default:
+                        default: // 'sain'
                           return {
                             gradient: 'from-emerald-500/20 via-green-500/10 to-emerald-400/20',
                             border: 'border-emerald-200/50',
