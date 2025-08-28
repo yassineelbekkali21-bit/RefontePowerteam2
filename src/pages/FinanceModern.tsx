@@ -40,6 +40,9 @@ const FinanceModern = () => {
   const [showClientDetail, setShowClientDetail] = useState(false);
   const [selectedPeriod, setSelectedPeriod] = useState('2024');
   const [showRealisePartnersSidebar, setShowRealisePartnersSidebar] = useState(false);
+  const [clientActions, setClientActions] = useState<{[clientId: string]: Array<{id: string, action: string, status: 'planned' | 'in_progress' | 'completed', dateCreated: Date, dateCompleted?: Date, notes?: string}>}>({});
+  const [showActionDialog, setShowActionDialog] = useState<{open: boolean, clientId: string | null, action: string | null}>({open: false, clientId: null, action: null});
+  const [actionNotes, setActionNotes] = useState('');
 
   // Données financières spécifiques pour la vue d'ensemble
   const budgetEconomiqueAnnuel = 3200000; // 3.2M€
@@ -159,7 +162,7 @@ const FinanceModern = () => {
         };
       } else if (client.realiseADate.pourcentageHeures > client.realiseADate.pourcentageCA + 15) {
         displayDiagnostic = {
-          type: 'desequilibre_prestation_paiement' as const,
+          type: 'credit_prestation' as const,
           alerte: `🔄 Presté ${client.realiseADate.pourcentageHeures.toFixed(1)}% mais payé seulement ${client.realiseADate.pourcentageCA.toFixed(1)}%`,
           actionRecommandee: 'Émettre facturation pour équilibrer prestation/paiement',
           urgence: 'high' as const // Suspects
@@ -199,7 +202,7 @@ const FinanceModern = () => {
             break;
           case 'sous_facturation':
           case 'rentabilite_faible':
-          case 'desequilibre_prestation_paiement':
+          case 'credit_prestation':
             statutFinal = 'suspect'; // Suspects
             break;
           case 'equilibre':
@@ -310,9 +313,49 @@ const FinanceModern = () => {
       case 'dette_prestation': return <AlertCircle className="w-4 h-4 text-orange-500" />;
       case 'sous_facturation': return <TrendingDown className="w-4 h-4 text-red-500" />;
       case 'rentabilite_faible': return <Euro className="w-4 h-4 text-purple-500" />;
-      case 'desequilibre_prestation_paiement': return <RotateCcw className="w-4 h-4 text-red-500" />;
+      case 'credit_prestation': return <RotateCcw className="w-4 h-4 text-red-500" />;
       default: return <CheckCircle className="w-4 h-4 text-green-500" />;
     }
+  };
+
+  // Fonctions de gestion des actions
+  const handleSelectAction = (clientId: string, action: string) => {
+    setShowActionDialog({open: true, clientId, action});
+    setActionNotes('');
+  };
+
+  const handleConfirmAction = () => {
+    if (!showActionDialog.clientId || !showActionDialog.action) return;
+    
+    const newAction = {
+      id: Date.now().toString(),
+      action: showActionDialog.action,
+      status: 'planned' as const,
+      dateCreated: new Date(),
+      notes: actionNotes
+    };
+
+    setClientActions(prev => ({
+      ...prev,
+      [showActionDialog.clientId!]: [
+        ...(prev[showActionDialog.clientId!] || []),
+        newAction
+      ]
+    }));
+
+    setShowActionDialog({open: false, clientId: null, action: null});
+    setActionNotes('');
+  };
+
+  const handleUpdateActionStatus = (clientId: string, actionId: string, newStatus: 'planned' | 'in_progress' | 'completed') => {
+    setClientActions(prev => ({
+      ...prev,
+      [clientId]: prev[clientId]?.map(action => 
+        action.id === actionId 
+          ? { ...action, status: newStatus, ...(newStatus === 'completed' ? { dateCompleted: new Date() } : {}) }
+          : action
+      ) || []
+    }));
   };
 
   return (
@@ -990,7 +1033,7 @@ const FinanceModern = () => {
                             { key: 'dette_prestation', label: 'Dette prestation', icon: AlertCircle, color: 'orange', statut: 'attention' },
                             { key: 'sous_facturation', label: 'Sous-facturation', icon: TrendingDown, color: 'red', statut: 'suspect' },
                             { key: 'rentabilite_faible', label: 'Rentabilité faible', icon: Euro, color: 'red', statut: 'suspect' },
-                            { key: 'desequilibre_prestation_paiement', label: 'Déséquilibre prestation/paiement', icon: RotateCcw, color: 'red', statut: 'suspect' },
+                            { key: 'credit_prestation', label: 'Crédit prestation', icon: RotateCcw, color: 'red', statut: 'suspect' },
                             { key: 'equilibre', label: 'Équilibre', icon: CheckCircle, color: 'green', statut: 'sain' }
                           ].filter((diagnostic) => {
                             // Filtrer les diagnostics selon le statut sélectionné
@@ -1233,7 +1276,7 @@ const FinanceModern = () => {
                                 {client.diagnostic?.type === 'dette_prestation' ? 'Dette Prestation' :
                                  client.diagnostic?.type === 'sous_facturation' ? 'Sous-Facturation' :
                                  client.diagnostic?.type === 'rentabilite_faible' ? 'Rentabilité Faible' :
-                                 client.diagnostic?.type === 'desequilibre_prestation_paiement' ? 'Déséquilibre Prestation/Paiement' :
+                                 client.diagnostic?.type === 'credit_prestation' ? 'Crédit Prestation' :
                                  'Équilibre Sain'}
                               </div>
                               <p className="text-xs text-gray-600 leading-relaxed px-1">
@@ -1660,8 +1703,8 @@ const FinanceModern = () => {
                   'Déséquilibre du portefeuille client'
                 ]
               },
-              'desequilibre_prestation_paiement': {
-                title: 'Analyse: Déséquilibre Prestation/Paiement Détecté',
+              'credit_prestation': {
+                title: 'Analyse: Crédit Prestation Détecté',
                 icon: RotateCcw,
                 color: 'red',
                 background: 'from-red-50 to-pink-50',
@@ -1881,14 +1924,86 @@ const FinanceModern = () => {
                       <CardContent>
                         <div className="space-y-3">
                           {currentDiagnostic.recommendations.map((rec, index) => (
-                            <div key={index} className="flex items-start space-x-3">
-                              <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                                <span className="text-xs font-bold text-blue-600">{index + 1}</span>
+                            <div key={index} className="flex items-start justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                              <div className="flex items-start space-x-3 flex-1">
+                                <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                                  <span className="text-xs font-bold text-blue-600">{index + 1}</span>
+                                </div>
+                                <p className="text-sm text-gray-700 flex-1">{rec}</p>
                               </div>
-                              <p className="text-sm text-gray-700">{rec}</p>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="ml-3 text-xs h-8 px-3"
+                                onClick={() => handleSelectAction(client.id, rec)}
+                              >
+                                Planifier
+                              </Button>
                             </div>
                           ))}
                         </div>
+                        
+                        {/* Historique des actions planifiées/en cours */}
+                        {clientActions[client.id] && clientActions[client.id].length > 0 && (
+                          <div className="mt-6 pt-6 border-t">
+                            <h4 className="font-semibold text-gray-900 mb-4 flex items-center">
+                              <Clock className="w-4 h-4 mr-2" />
+                              Historique des Actions
+                            </h4>
+                            <div className="space-y-3">
+                              {clientActions[client.id].map((action) => (
+                                <div key={action.id} className="p-3 bg-white border rounded-lg">
+                                  <div className="flex items-start justify-between">
+                                    <div className="flex-1">
+                                      <p className="text-sm font-medium text-gray-900">{action.action}</p>
+                                      {action.notes && (
+                                        <p className="text-xs text-gray-600 mt-1">{action.notes}</p>
+                                      )}
+                                      <p className="text-xs text-gray-500 mt-1">
+                                        Créée le {action.dateCreated.toLocaleDateString()}
+                                        {action.dateCompleted && ` • Terminée le ${action.dateCompleted.toLocaleDateString()}`}
+                                      </p>
+                                    </div>
+                                    <div className="ml-3 flex flex-col space-y-1">
+                                      <Badge 
+                                        className={
+                                          action.status === 'completed' ? 'bg-green-100 text-green-700' :
+                                          action.status === 'in_progress' ? 'bg-blue-100 text-blue-700' :
+                                          'bg-gray-100 text-gray-700'
+                                        }
+                                      >
+                                        {action.status === 'completed' ? 'Terminée' :
+                                         action.status === 'in_progress' ? 'En cours' : 'Planifiée'}
+                                      </Badge>
+                                      {action.status !== 'completed' && (
+                                        <div className="flex space-x-1">
+                                          {action.status === 'planned' && (
+                                            <Button
+                                              variant="outline"
+                                              size="sm"
+                                              className="text-xs h-6 px-2"
+                                              onClick={() => handleUpdateActionStatus(client.id, action.id, 'in_progress')}
+                                            >
+                                              Démarrer
+                                            </Button>
+                                          )}
+                                          <Button
+                                            variant="outline"
+                                            size="sm"
+                                            className="text-xs h-6 px-2"
+                                            onClick={() => handleUpdateActionStatus(client.id, action.id, 'completed')}
+                                          >
+                                            Terminer
+                                          </Button>
+                                        </div>
+                                      )}
+                                    </div>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
                       </CardContent>
                     </Card>
 
@@ -1999,6 +2114,44 @@ const FinanceModern = () => {
               </div>
             );
           })()}
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog de confirmation d'action */}
+      <Dialog open={showActionDialog.open} onOpenChange={(open) => setShowActionDialog({...showActionDialog, open})}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Planifier une Action</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <label className="text-sm font-medium text-gray-700">Action sélectionnée:</label>
+              <p className="text-sm text-gray-900 bg-gray-50 p-3 rounded-lg mt-1">
+                {showActionDialog.action}
+              </p>
+            </div>
+            <div>
+              <label className="text-sm font-medium text-gray-700">Notes (optionnel):</label>
+              <Textarea
+                placeholder="Ajoutez des notes ou des détails spécifiques..."
+                value={actionNotes}
+                onChange={(e) => setActionNotes(e.target.value)}
+                className="mt-1"
+                rows={3}
+              />
+            </div>
+            <div className="flex justify-end space-x-2 pt-4">
+              <Button 
+                variant="outline" 
+                onClick={() => setShowActionDialog({open: false, clientId: null, action: null})}
+              >
+                Annuler
+              </Button>
+              <Button onClick={handleConfirmAction}>
+                Planifier l'Action
+              </Button>
+            </div>
+          </div>
         </DialogContent>
       </Dialog>
       </div>
