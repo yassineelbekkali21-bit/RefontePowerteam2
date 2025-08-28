@@ -149,12 +149,20 @@ const FinanceModern = () => {
       
       let displayDiagnostic;
       
+      // Nouveau diagnostic : Déséquilibre prestation/paiement
       if (ecartFacturationPrestation > 25 && client.realiseADate.pourcentageCA > 70) {
         displayDiagnostic = {
           type: 'dette_prestation' as const,
           alerte: `⚠️ Client payé à ${client.realiseADate.pourcentageCA.toFixed(1)}% mais seulement ${client.realiseADate.pourcentageHeures.toFixed(1)}% presté`,
           actionRecommandee: 'Analyser le planning et rattraper les heures',
           urgence: 'medium' as const // À surveiller
+        };
+      } else if (client.realiseADate.pourcentageHeures > client.realiseADate.pourcentageCA + 15) {
+        displayDiagnostic = {
+          type: 'desequilibre_prestation_paiement' as const,
+          alerte: `🔄 Presté ${client.realiseADate.pourcentageHeures.toFixed(1)}% mais payé seulement ${client.realiseADate.pourcentageCA.toFixed(1)}%`,
+          actionRecommandee: 'Émettre facturation pour équilibrer prestation/paiement',
+          urgence: 'high' as const // Suspects
         };
       } else if (ecartFacturationPrestation < -20) {
         displayDiagnostic = {
@@ -191,6 +199,7 @@ const FinanceModern = () => {
             break;
           case 'sous_facturation':
           case 'rentabilite_faible':
+          case 'desequilibre_prestation_paiement':
             statutFinal = 'suspect'; // Suspects
             break;
           case 'equilibre':
@@ -301,6 +310,7 @@ const FinanceModern = () => {
       case 'dette_prestation': return <AlertCircle className="w-4 h-4 text-orange-500" />;
       case 'sous_facturation': return <TrendingDown className="w-4 h-4 text-red-500" />;
       case 'rentabilite_faible': return <Euro className="w-4 h-4 text-purple-500" />;
+      case 'desequilibre_prestation_paiement': return <RotateCcw className="w-4 h-4 text-red-500" />;
       default: return <CheckCircle className="w-4 h-4 text-green-500" />;
     }
   };
@@ -980,6 +990,7 @@ const FinanceModern = () => {
                             { key: 'dette_prestation', label: 'Dette prestation', icon: AlertCircle, color: 'orange', statut: 'attention' },
                             { key: 'sous_facturation', label: 'Sous-facturation', icon: TrendingDown, color: 'red', statut: 'suspect' },
                             { key: 'rentabilite_faible', label: 'Rentabilité faible', icon: Euro, color: 'red', statut: 'suspect' },
+                            { key: 'desequilibre_prestation_paiement', label: 'Déséquilibre prestation/paiement', icon: RotateCcw, color: 'red', statut: 'suspect' },
                             { key: 'equilibre', label: 'Équilibre', icon: CheckCircle, color: 'green', statut: 'sain' }
                           ].filter((diagnostic) => {
                             // Filtrer les diagnostics selon le statut sélectionné
@@ -1222,6 +1233,7 @@ const FinanceModern = () => {
                                 {client.diagnostic?.type === 'dette_prestation' ? 'Dette Prestation' :
                                  client.diagnostic?.type === 'sous_facturation' ? 'Sous-Facturation' :
                                  client.diagnostic?.type === 'rentabilite_faible' ? 'Rentabilité Faible' :
+                                 client.diagnostic?.type === 'desequilibre_prestation_paiement' ? 'Déséquilibre Prestation/Paiement' :
                                  'Équilibre Sain'}
                               </div>
                               <p className="text-xs text-gray-600 leading-relaxed px-1">
@@ -1646,6 +1658,26 @@ const FinanceModern = () => {
                   'Difficultés à couvrir les coûts',
                   'Impact sur la viabilité long terme',
                   'Déséquilibre du portefeuille client'
+                ]
+              },
+              'desequilibre_prestation_paiement': {
+                title: 'Analyse: Déséquilibre Prestation/Paiement Détecté',
+                icon: RotateCcw,
+                color: 'red',
+                background: 'from-red-50 to-pink-50',
+                border: 'border-red-200',
+                description: 'Le pourcentage d\'heures prestées dépasse significativement le pourcentage de facturation payée.',
+                recommendations: [
+                  'Émettre une facturation complémentaire immédiatement',
+                  'Vérifier les termes contractuels de paiement',
+                  'Mettre en place un suivi renforcé prestation/facturation',
+                  'Négocier un rééquilibrage avec le client'
+                ],
+                risks: [
+                  'Trésorerie impactée par le décalage',
+                  'Déséquilibre financier du dossier',
+                  'Risque de créance non recouvrée',
+                  'Impact sur la rentabilité globale'
                 ]
               },
               'equilibre': {
