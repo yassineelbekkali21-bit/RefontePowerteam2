@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Code, Eye, Users, Calendar, Target, TrendingUp, CheckCircle, AlertTriangle, Clock, Plus, Filter, Search, Settings, GitBranch, FileText, X, Save, Edit, Trash2, User, ArrowRight, Zap, Sparkles, Brain, Wand2, Send } from 'lucide-react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import { PageHeader } from '@/components/layout/PageHeader';
 import { usePlans, CorrectionPlan, PlanActivity } from '@/contexts/PlansContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -1430,23 +1431,19 @@ const Developpement: React.FC = () => {
     <DashboardLayout>
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 p-6">
         {/* Header */}
-        <div className="relative mb-8 p-8 rounded-3xl bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white overflow-hidden">
-          <div className="absolute inset-0 bg-black/10 backdrop-blur-sm"></div>
-          <div className="relative z-10">
-            <div className="flex items-center justify-between mb-4">
-              <div>
-                <h1 className="text-4xl font-bold mb-2">Développement</h1>
-                <p className="text-blue-100 text-lg">Gestion des projets et plans de développement</p>
-              </div>
-              <div className="flex items-center space-x-4">
-                <div className="bg-white/20 backdrop-blur-sm rounded-2xl p-4">
-                  <div className="text-2xl font-bold">{supervisionData.activeProjects}</div>
-                  <div className="text-sm text-blue-100">Projets actifs</div>
-                </div>
+        <PageHeader
+          title="🔧 Développement"
+          description="Gestion des projets et plans de développement"
+          icon={Code}
+          actions={
+            <div className="flex items-center space-x-4">
+              <div className="bg-blue-100 rounded-lg p-3 text-center">
+                <div className="text-2xl font-bold text-blue-900">{supervisionData.activeProjects}</div>
+                <div className="text-sm text-blue-600">Projets actifs</div>
               </div>
             </div>
-          </div>
-        </div>
+          }
+        />
 
         {/* Navigation Tabs */}
         <div className="flex items-center justify-between mb-8">

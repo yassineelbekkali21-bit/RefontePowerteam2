@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Users, BarChart3, Clock, Calendar, Brain } from 'lucide-react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import { PageHeader } from '@/components/layout/PageHeader';
 import { Button } from '@/components/ui/button';
 import { PlanningProvider } from '@/contexts/PlanningContext';
 import SuiviIndividuel from '@/components/production/SuiviIndividuel';
@@ -25,31 +26,28 @@ const Production = () => {
     <PlanningProvider>
       <DashboardLayout>
         <div className="space-y-6">
-        {/* Header avec navigation */}
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-          <div>
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-              Production & Planification
-            </h1>
-            <p className="text-gray-600 mt-2">Performance, échéances et planification intelligente</p>
-          </div>
-
-          {/* Dashboard KPIs rapides */}
-          <div className="flex items-center gap-4 text-sm">
-            <div className="text-center">
-              <div className="text-lg font-bold text-green-600">{dashboardProduction.indicateurs.length}</div>
-              <div className="text-gray-500">Collaborateurs</div>
+        <PageHeader
+          title="⚡ Production & Planification"
+          description="Performance, échéances et planification intelligente"
+          icon={BarChart3}
+          actions={
+            /* Dashboard KPIs rapides */
+            <div className="flex items-center gap-4 text-sm">
+              <div className="text-center">
+                <div className="text-lg font-bold text-green-600">{dashboardProduction.indicateurs.length}</div>
+                <div className="text-gray-500">Collaborateurs</div>
+              </div>
+              <div className="text-center">
+                <div className="text-lg font-bold text-blue-600">24</div>
+                <div className="text-gray-500">Échéances</div>
+              </div>
+              <div className="text-center">
+                <div className="text-lg font-bold text-orange-600">2</div>
+                <div className="text-gray-500">Retard moyen</div>
+              </div>
             </div>
-            <div className="text-center">
-              <div className="text-lg font-bold text-blue-600">24</div>
-              <div className="text-gray-500">Échéances</div>
-            </div>
-            <div className="text-center">
-              <div className="text-lg font-bold text-orange-600">2</div>
-              <div className="text-gray-500">Retard moyen</div>
-            </div>
-          </div>
-        </div>
+          }
+        />
 
         {/* Navigation par onglets */}
         <div className="border-b border-gray-200">

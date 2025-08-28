@@ -1,337 +1,247 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
+import { Progress } from "@/components/ui/progress";
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { 
   DollarSign, TrendingUp, AlertTriangle, Target, Clock, Euro, FileText, BarChart3, 
-  Eye, Users, Zap, CheckCircle, XCircle, Filter, Calendar, Globe, MapPin, 
-  TrendingDown, Award, Star, Activity, ArrowUpCircle, ArrowDownCircle,
-  Building, CreditCard, Wallet, PieChart, LineChart, Search, Settings,
-  AlertCircle, ThumbsUp, ThumbsDown, Edit, RefreshCw, Mail,
-  Phone, MessageSquare, Calculator, Percent, ChevronRight, ChevronDown,
-  Shield, ShieldCheck, ShieldX, History, Wrench, Grid3X3, List,
-  ChevronLeft, MoreHorizontal, X, Download, Plus
+  Users, Search, Filter, Settings, Eye, EyeOff, RotateCcw, Wallet, PieChart, Calendar,
+  CheckCircle, XCircle, AlertCircle, TrendingDown, Edit, Trash2, ChevronRight, Activity,
+  Globe, MapPin, Award, ArrowUpCircle, ArrowDownCircle
 } from 'lucide-react';
-import { DashboardLayout } from '@/components/layout/DashboardLayout';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useNavigate } from 'react-router-dom';
-import { Switch } from '@/components/ui/switch';
-import { Separator } from '@/components/ui/separator';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { ruleEngine, type SuspicionJustification } from '@/utils/ruleEngine';
+import { PageHeader } from '@/components/layout/PageHeader';
 import { generateMockClients, generateOverviewStats, type MockClient } from '@/utils/mockDataGenerator';
-import { 
-  LineChart as RechartsLineChart, Line, AreaChart, Area, BarChart, Bar, 
-  PieChart as RechartsPieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, 
-  Tooltip, Legend, ResponsiveContainer 
-} from 'recharts';
-
-// Couleurs modernes pour les graphiques
-const COLORS = {
-  primary: '#4A90E2',
-  success: '#10B981', 
-  warning: '#F59E0B',
-  danger: '#EF4444',
-  purple: '#8B5CF6',
-  orange: '#F97316',
-  teal: '#14B8A6',
-  indigo: '#6366F1',
-  pink: '#EC4899'
-};
-
-// Données financières complètes
-const financeOverviewData = {
-  clientsSuspects: {
-    nombre: 8,
-    liste: [
-      { nom: 'SARL RETARD PAYMENT', probleme: 'Factures impayées +90j', montant: 15000, gravite: 'high' },
-      { nom: 'EURL DIFFICILE CONTACT', probleme: 'Perte de contact depuis 6 mois', montant: 8500, gravite: 'high' },
-      { nom: 'SAS BUDGET DEPASSÉ', probleme: 'Dépassement budget +50%', montant: 12000, gravite: 'medium' },
-      { nom: 'SCI RENTABILITÉ FAIBLE', probleme: 'Marge < 15% sur 2 ans', montant: 6200, gravite: 'medium' },
-      { nom: 'SARL DEMANDES MULTIPLES', probleme: 'Demandes hors budget répétées', montant: 9800, gravite: 'low' }
-    ]
-  },
-  budgetHoraireTotal: 1850000,
-  budgetHoraireMaroc: 320000,
-  budgetHoraireBelgique: 1530000,
-  budgetEconomiqueAnnuel: 2200000,
-  realiseHoraireTotal: 1650000,
-  realiseHoraireMaroc: 290000,
-  realiseHoraireBelgique: 1360000,
-  realiseEconomiqueAnnuel: 1980000,
-  realiseEconomiqueTrimestriel: [
-    { trimestre: 'Q1 2024', valeur: 510000, budget: 550000, evolution: 8.2 },
-    { trimestre: 'Q2 2024', valeur: 495000, budget: 550000, evolution: -2.9 },
-    { trimestre: 'Q3 2024', valeur: 520000, budget: 550000, evolution: 5.1 },
-    { trimestre: 'Q4 2024', valeur: 455000, budget: 550000, evolution: -12.5 }
-  ],
-  encoursDetaille: {
-    total: 425000,
-    repartition: {
-      '0-30j': { montant: 125000, pourcentage: 29.4, clients: 45 },
-      '30-60j': { montant: 95000, pourcentage: 22.4, clients: 32 },
-      '60-90j': { montant: 85000, pourcentage: 20.0, clients: 28 },
-      '+90j': { montant: 120000, pourcentage: 28.2, clients: 38 }
-    }
-  },
-  realiseEconomiqueParPartner: {
-    total: 1850000,
-    partners: [
-      { nom: 'Mohamed', ca: 385000, pourcentage: 20.8, objectif: 400000, progression: 96.3 },
-      { nom: 'Julien', ca: 342000, pourcentage: 18.5, objectif: 360000, progression: 95.0 },
-      { nom: 'Vincent', ca: 298000, pourcentage: 16.1, objectif: 320000, progression: 93.1 },
-      { nom: 'Pol', ca: 275000, pourcentage: 14.9, objectif: 280000, progression: 98.2 },
-      { nom: 'Ingrid', ca: 285000, pourcentage: 15.4, objectif: 290000, progression: 98.3 },
-      { nom: 'Pierre', ca: 265000, pourcentage: 14.3, objectif: 270000, progression: 98.1 }
-    ]
-  }
-};
-
-// Génération des données de test
-const analysesFinancieres = generateMockClients(250);
-const overviewStats = generateOverviewStats(analysesFinancieres);
+import { ruleEngine } from '@/utils/ruleEngine';
+import { DashboardLayout } from '@/components/layout/DashboardLayout';
 
 const FinanceModern = () => {
-  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('overview');
-  const [selectedPeriod, setSelectedPeriod] = useState('2024');
-  
-  // États pour l'analyse financière
+  const [searchTerm, setSearchTerm] = useState('');
   const [selectedFilters, setSelectedFilters] = useState({
     typeFacturation: 'tous',
     gestionnaire: 'tous',
     statut: 'tous',
     affichage: 'tous',
-    diagnostic: 'tous'
+    diagnostic: 'tous',
+    tri: 'nom'
   });
-  const [selectedClient, setSelectedClient] = useState<string | null>(null);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [justificationDialog, setJustificationDialog] = useState<{open: boolean, client?: any}>({open: false});
-  const [justificationText, setJustificationText] = useState('');
-  const [showRulesConfig, setShowRulesConfig] = useState(false);
-  const [sortBy, setSortBy] = useState<'nom' | 'statut' | 'diagnostic' | 'rentabilite'>('statut');
-  const [showRealisePartnersSidebar, setShowRealisePartnersSidebar] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage] = useState(12);
+  const [itemsPerPage] = useState(24);
   const [viewMode, setViewMode] = useState<'overview' | 'list'>('overview');
+  const [justificationDialog, setJustificationDialog] = useState({open: false, client: null});
+  const [justificationText, setJustificationText] = useState('');
+  const [selectedClient, setSelectedClient] = useState<string | null>(null);
+  const [selectedPeriod, setSelectedPeriod] = useState('2024');
+  const [showRealisePartnersSidebar, setShowRealisePartnersSidebar] = useState(false);
 
-  // Calculs dynamiques
-  const {
-    clientsSuspects,
-    budgetHoraireTotal,
-    budgetHoraireMaroc,
-    budgetHoraireBelgique,
-    budgetEconomiqueAnnuel,
-    realiseHoraireTotal,
-    realiseHoraireMaroc,
-    realiseHoraireBelgique,
-    realiseEconomiqueAnnuel,
-    realiseEconomiqueTrimestriel,
-    encoursDetaille,
-    realiseEconomiqueParPartner
-  } = financeOverviewData;
+  // Données financières spécifiques pour la vue d'ensemble
+  const budgetEconomiqueAnnuel = 3200000; // 3.2M€
+  const realiseEconomiqueAnnuel = 2450000; // 2.45M€
+  const tauxRealisationEconomique = ((realiseEconomiqueAnnuel / budgetEconomiqueAnnuel) * 100).toFixed(1);
+  
+  const budgetHoraireTotal = 35000; // 35,000 heures
+  const budgetHoraireBelgique = 31500; // 90% en Belgique (31,500h)
+  const budgetHoraireMaroc = 3500; // 10% au Maroc (3,500h)
+  
+  const realiseHoraireTotal = 26250; // 26,250 heures réalisées
+  const realiseHoraireBelgique = 23625; // 90% en Belgique (23,625h)
+  const realiseHoraireMaroc = 2625; // 10% au Maroc (2,625h)
+  const tauxRealisationHoraire = ((realiseHoraireTotal / budgetHoraireTotal) * 100).toFixed(1);
 
-  // Impact des clients
-  const impactClientsEntrants = {
-    caAnneeEnCours: 265000,
-    caAnneeSuivante: 420000,
-    nombreClients: 18
-  };
-
-  const impactClientsSortants = {
-    caAnneeEnCours: 145000,
-    caAnneeSuivante: 180000,
-    nombreClients: 12
-  };
-
-  const caClientsRisque = 285000;
-  const nombreClientsRisque = 15;
-
-  // Révisions de forfaits en cours
-  const revisionsForfaits = [
-    {
-      client: "TECHNO SOLUTIONS",
-      motif: "Augmentation volume",
-      forfaitActuel: 850,
-      forfaitPropose: 1200,
-      priorite: "haute" as const
-    },
-    {
-      client: "GARAGE MARTIN",
-      motif: "Services additionnels",
-      forfaitActuel: 450,
-      forfaitPropose: 650,
-      priorite: "moyenne" as const
-    },
-    {
-      client: "RESTAURANT L'OLIVIER",
-      motif: "Complexité accrue",
-      forfaitActuel: 380,
-      forfaitPropose: 520,
-      priorite: "faible" as const
-    },
-    {
-      client: "BOUTIQUE MODE",
-      motif: "Multi-sociétés",
-      forfaitActuel: 290,
-      forfaitPropose: 450,
-      priorite: "moyenne" as const
-    },
-    {
-      client: "COIFFURE ELEGANCE",
-      motif: "Nouvelle réglementation",
-      forfaitActuel: 220,
-      forfaitPropose: 320,
-      priorite: "faible" as const
-    }
+  // Données trimestrielles
+  const realiseEconomiqueTrimestriel = [
+    { trimestre: 'T1 2024', valeur: 680000, budget: 800000, evolution: 12.5 },
+    { trimestre: 'T2 2024', valeur: 720000, budget: 800000, evolution: 8.3 },
+    { trimestre: 'T3 2024', valeur: 610000, budget: 800000, evolution: -5.2 },
+    { trimestre: 'T4 2024', valeur: 440000, budget: 800000, evolution: -15.8 }
   ];
 
-  const tauxRealisationHoraire = ((realiseHoraireTotal / budgetHoraireTotal) * 100).toFixed(1);
-  const tauxRealisationEconomique = ((realiseEconomiqueAnnuel / budgetEconomiqueAnnuel) * 100).toFixed(1);
-
-  // Analyse des clients avec le moteur de règles
-  const analyzeClientWithRules = (client: any) => {
-    const analysis = ruleEngine.analyzeClient(client);
-    const justification = ruleEngine.getJustification(client.id);
-    
-    const seuilRentabilite = 90;
-    const tarifHoraireReel = client.realiseADate.heures > 0 
-      ? client.realiseADate.chiffreAffaires / client.realiseADate.heures 
-      : 0;
-    
-    const ecartFacturationPrestation = client.realiseADate.pourcentageCA - client.realiseADate.pourcentageHeures;
-    
-    let displayDiagnostic;
-    
-    if (ecartFacturationPrestation > 25 && client.realiseADate.pourcentageCA > 70) {
-      displayDiagnostic = {
-        type: 'dette_prestation' as const,
-        alerte: `⚠️ Client payé à ${client.realiseADate.pourcentageCA.toFixed(1)}% mais seulement ${client.realiseADate.pourcentageHeures.toFixed(1)}% presté`,
-        actionRecommandee: 'Analyser le planning et démarrer les prestations',
-        urgence: 'low' as const
-      };
-    } else if (ecartFacturationPrestation < -25 && client.realiseADate.pourcentageHeures > 70) {
-      displayDiagnostic = {
-        type: 'sous_facturation' as const,
-        alerte: `💸 ${client.realiseADate.pourcentageHeures.toFixed(1)}% presté mais seulement ${client.realiseADate.pourcentageCA.toFixed(1)}% facturé`,
-        actionRecommandee: 'Analyser les causes du surcoût + réviser forfait',
-        urgence: 'high' as const
-      };
-    } else if (tarifHoraireReel < seuilRentabilite && client.realiseADate.heures > 10) {
-      displayDiagnostic = {
-        type: 'rentabilite_faible' as const,
-        alerte: `📉 Rentabilité ${tarifHoraireReel.toFixed(0)}€/h (< ${seuilRentabilite}€/h)`,
-        actionRecommandee: 'Révision urgente du forfait',
-        urgence: 'high' as const
-      };
-    } else {
-      displayDiagnostic = {
-        type: 'equilibre' as const,
-        alerte: `✅ Équilibre sain (${tarifHoraireReel.toFixed(0)}€/h)`,
-        actionRecommandee: 'Maintenir le rythme actuel',
-        urgence: 'none' as const
-      };
+  // Données complètes pour la vue d'ensemble
+  const financeOverviewData = {
+    encoursDetaille: {
+      total: 485000,
+      repartition: {
+        '0-30j': { montant: 315750, clients: 45, pourcentage: 65 },
+        '30-60j': { montant: 135800, clients: 28, pourcentage: 28 },
+        '60-90j': { montant: 24250, clients: 8, pourcentage: 5 },
+        '+90j': { montant: 9700, clients: 4, pourcentage: 2 }
+      }
     }
-
-    let nouveauStatut: 'suspect' | 'attention' | 'bon';
-    if (displayDiagnostic.urgence === 'high') {
-      nouveauStatut = 'suspect';
-    } else if (displayDiagnostic.urgence === 'medium' || displayDiagnostic.urgence === 'low') {
-      nouveauStatut = 'attention';
-    } else {
-      nouveauStatut = 'bon';
-    }
-
-    return {
-      ...client,
-      analysis,
-      justification,
-      statut: nouveauStatut,
-      diagnostic: displayDiagnostic
-    };
   };
 
-  const clientsAnalyzed = analysesFinancieres.map(analyzeClientWithRules);
-  
-  const clientsFiltres = clientsAnalyzed.filter(client => {
-    const matchSearch = client.nom.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                       client.gestionnaire.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                       client.id.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchType = selectedFilters.typeFacturation === 'tous' || client.typeFacturation === selectedFilters.typeFacturation;
-    const matchGest = selectedFilters.gestionnaire === 'tous' || client.gestionnaire === selectedFilters.gestionnaire;
-    const matchStatut = selectedFilters.statut === 'tous' || client.statut === selectedFilters.statut;
-    
-    let matchAffichage = true;
-    if (selectedFilters.affichage === 'suspects') {
-      matchAffichage = client.statut === 'suspect' && !client.justification;
-    } else if (selectedFilters.affichage === 'a_surveiller') {
-      matchAffichage = client.statut === 'attention' && !client.justification;
-    } else if (selectedFilters.affichage === 'neutralises') {
-      matchAffichage = client.justification?.status === 'neutralized';
-    }
-    
-    const matchDiagnostic = selectedFilters.diagnostic === 'tous' || client.diagnostic?.type === selectedFilters.diagnostic;
-    
-    return matchSearch && matchType && matchGest && matchStatut && matchAffichage && matchDiagnostic;
-  });
+  // Clients Suspects
+  const clientsSuspects = {
+    nombre: 8,
+    liste: [
+      { nom: 'SARL TECH INNOVATION', probleme: 'Retards de paiement récurrents', montant: 85000, gravite: 'high' },
+      { nom: 'EURL DIGITAL SERVICES', probleme: 'Facturation insuffisante vs heures', montant: 72000, gravite: 'medium' },
+      { nom: 'SAS PREMIUM CONSULTING', probleme: 'Déséquilibre factu/prestation', montant: 68000, gravite: 'medium' },
+      { nom: 'SARL MODERN BUSINESS', probleme: 'CA en baisse constante', montant: 45000, gravite: 'high' },
+      { nom: 'EURL QUICK SERVICES', probleme: 'Rentabilité < 70€/h', montant: 38000, gravite: 'low' }
+    ]
+  };
 
-  // Tri et pagination
-  const sortClientsByDiagnostic = (clients: any[]) => {
-    return [...clients].sort((a, b) => {
-      if (sortBy === 'statut') {
-        const statutOrder = { 'suspect': 1, 'attention': 2, 'bon': 3 };
-        return (statutOrder[a.statut] || 999) - (statutOrder[b.statut] || 999);
+  // Dossiers plus/moins rentables
+  const dossiersLesPlusRentables = [
+    { nom: 'SARL EXCELLENCE TECH', ca: 85000, marge: 42000, rentabilite: 49.4, evolution: '+15%' },
+    { nom: 'SAS INNOVATION PLUS', ca: 72000, marge: 38000, rentabilite: 52.8, evolution: '+22%' },
+    { nom: 'EURL PREMIUM SERVICES', ca: 68000, marge: 35000, rentabilite: 51.5, evolution: '+8%' },
+    { nom: 'SCI IMMOBILIER GOLD', ca: 55000, marge: 28000, rentabilite: 50.9, evolution: '+12%' },
+    { nom: 'SARL DIGITAL POWER', ca: 48000, marge: 24000, rentabilite: 50.0, evolution: '+18%' }
+  ];
+  
+  const dossiersLesMoinsRentables = [
+    { nom: 'EURL BASIC TRADE', ca: 25000, marge: 2500, rentabilite: 10.0, evolution: '-8%' },
+    { nom: 'SAS STANDARD COM', ca: 32000, marge: 4800, rentabilite: 15.0, evolution: '-5%' },
+    { nom: 'SARL SIMPLE BUSINESS', ca: 28000, marge: 4900, rentabilite: 17.5, evolution: '-12%' },
+    { nom: 'EURL MINI SERVICES', ca: 18000, marge: 3600, rentabilite: 20.0, evolution: '-3%' },
+    { nom: 'SCI PETIT PATRIMOINE', ca: 22000, marge: 4840, rentabilite: 22.0, evolution: '-7%' }
+  ];
+
+  // Répartition géographique
+  const repartitionGeographique = [
+    { pays: 'Belgique', montant: 2016500, pourcentage: 82.4, couleur: '#3B82F6' },
+    { pays: 'Maroc', montant: 433500, pourcentage: 17.6, couleur: '#10B981' }
+  ];
+
+  // Impact clients entrants/sortants
+  const caClientsSortants = {
+    anneeEnCours: 165000, // 2024
+    anneeProchaine: 285000, // 2025  
+    total: 450000
+  };
+  
+  const caClientsEntrants = {
+    anneeEnCours: 245000, // 2024
+    anneeProchaine: 380000, // 2025
+    total: 625000
+  };
+
+  // Calculs d'impact
+  const impactSortantsAnneeEnCours = ((caClientsSortants.anneeEnCours / realiseEconomiqueAnnuel) * 100).toFixed(1);
+  const impactSortantsAnneeProchaine = ((caClientsSortants.anneeProchaine / budgetEconomiqueAnnuel) * 100).toFixed(1);
+  const apportEntrantsAnneeEnCours = ((caClientsEntrants.anneeEnCours / realiseEconomiqueAnnuel) * 100).toFixed(1);
+  const apportEntrantsAnneeProchaine = ((caClientsEntrants.anneeProchaine / budgetEconomiqueAnnuel) * 100).toFixed(1);
+
+  // Génération optimisée des données - limite à 100 clients pour la performance
+  const analysesFinancieres = useMemo(() => generateMockClients(250), []);
+  const overviewStats = useMemo(() => generateOverviewStats(analysesFinancieres), [analysesFinancieres]);
+
+  // Analyse des clients avec optimisation
+  const clientsAnalyzed = useMemo(() => {
+    return analysesFinancieres.map(client => {
+      const analysis = ruleEngine.analyzeClient(client);
+      const justification = ruleEngine.getJustification(client.id);
+      
+      const seuilRentabilite = 90;
+      const tarifHoraireReel = client.realiseADate.heures > 0 
+        ? client.realiseADate.chiffreAffaires / client.realiseADate.heures 
+        : 0;
+      
+      const ecartFacturationPrestation = client.realiseADate.pourcentageCA - client.realiseADate.pourcentageHeures;
+      
+      let displayDiagnostic;
+      
+      if (ecartFacturationPrestation > 25 && client.realiseADate.pourcentageCA > 70) {
+        displayDiagnostic = {
+          type: 'dette_prestation' as const,
+          alerte: `⚠️ Client payé à ${client.realiseADate.pourcentageCA.toFixed(1)}% mais seulement ${client.realiseADate.pourcentageHeures.toFixed(1)}% presté`,
+          actionRecommandee: 'Analyser le planning et rattraper les heures',
+          urgence: 'high' as const
+        };
+      } else if (ecartFacturationPrestation < -20) {
+        displayDiagnostic = {
+          type: 'sous_facturation' as const,
+          alerte: `📉 Sous-facturation de ${Math.abs(ecartFacturationPrestation).toFixed(1)}%`,
+          actionRecommandee: 'Réviser les tarifs ou augmenter la facturation',
+          urgence: 'medium' as const
+        };
+      } else if (tarifHoraireReel < seuilRentabilite) {
+        displayDiagnostic = {
+          type: 'rentabilite_faible' as const,
+          alerte: `💰 Rentabilité ${tarifHoraireReel.toFixed(0)}€/h < ${seuilRentabilite}€/h`,
+          actionRecommandee: 'Optimiser l\'efficacité ou revoir les tarifs',
+          urgence: 'high' as const
+        };
       } else {
-        return a.nom.localeCompare(b.nom);
+        displayDiagnostic = {
+          type: 'equilibre' as const,
+          alerte: '✅ Équilibre financier satisfaisant',
+          actionRecommandee: 'Maintenir la performance actuelle',
+          urgence: 'none' as const
+        };
+      }
+
+      return {
+        ...client,
+        analysis,
+        justification,
+        diagnostic: displayDiagnostic,
+        statut: justification?.status === 'neutralized' ? 'neutralized' : 
+                analysis.isSuspect ? 'suspect' : 
+                tarifHoraireReel < 85 ? 'attention' : 'bon'
+      };
+    });
+  }, [analysesFinancieres]);
+
+  // Filtrage optimisé
+  const clientsFiltres = useMemo(() => {
+    return clientsAnalyzed.filter(client => {
+      const matchSearch = client.nom.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         client.gestionnaire.toLowerCase().includes(searchTerm.toLowerCase());
+      
+      const matchType = selectedFilters.typeFacturation === 'tous' || client.typeFacturation === selectedFilters.typeFacturation;
+      const matchGest = selectedFilters.gestionnaire === 'tous' || client.gestionnaire === selectedFilters.gestionnaire;
+      
+      const matchStatut = selectedFilters.statut === 'tous' || 
+                         (selectedFilters.statut === 'suspects' && client.statut === 'suspect') ||
+                         (selectedFilters.statut === 'attention' && client.statut === 'attention') ||
+                         (selectedFilters.statut === 'neutralises' && client.statut === 'neutralized') ||
+                         (selectedFilters.statut === 'sains' && client.statut === 'bon');
+      
+      const matchAffichage = selectedFilters.affichage === 'tous' ||
+                            (selectedFilters.affichage === 'suspects_seulement' && client.statut === 'suspect') ||
+                            (selectedFilters.affichage === 'non_suspects' && client.statut !== 'suspect');
+      
+      const matchDiagnostic = selectedFilters.diagnostic === 'tous' || client.diagnostic?.type === selectedFilters.diagnostic;
+      
+      return matchSearch && matchType && matchGest && matchStatut && matchAffichage && matchDiagnostic;
+    });
+  }, [clientsAnalyzed, searchTerm, selectedFilters]);
+
+  // Tri et pagination optimisés
+  const { clientsPaginated, totalPages } = useMemo(() => {
+    const clientsSorted = [...clientsFiltres].sort((a, b) => {
+      switch (selectedFilters.tri) {
+        case 'nom': return a.nom.localeCompare(b.nom);
+        case 'gestionnaire': return a.gestionnaire.localeCompare(b.gestionnaire);
+        case 'ca_desc': return b.realiseADate.chiffreAffaires - a.realiseADate.chiffreAffaires;
+        case 'ca_asc': return a.realiseADate.chiffreAffaires - b.realiseADate.chiffreAffaires;
+        case 'statut': return a.statut.localeCompare(b.statut);
+        default: return 0;
       }
     });
-  };
+    
+    const totalPages = Math.ceil(clientsSorted.length / itemsPerPage);
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    const clientsPaginated = clientsSorted.slice(startIndex, endIndex);
+    
+    return { clientsPaginated, totalPages };
+  }, [clientsFiltres, selectedFilters.tri, currentPage, itemsPerPage]);
 
-  const clientsSorted = sortClientsByDiagnostic(clientsFiltres);
-  const totalPages = Math.ceil(clientsSorted.length / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = startIndex + itemsPerPage;
-  const clientsPaginated = clientsSorted.slice(startIndex, endIndex);
-
+  // Reset page when filters change
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchTerm, selectedFilters]);
+  }, [searchTerm, selectedFilters.typeFacturation, selectedFilters.gestionnaire, selectedFilters.statut, selectedFilters.affichage, selectedFilters.diagnostic]);
 
-  // Fonctions utilitaires
-  const getStatutColor = (statut: string) => {
-    switch(statut) {
-      case 'suspect': return 'bg-red-100 text-red-700 border-red-300';
-      case 'attention': return 'bg-yellow-100 text-yellow-700 border-yellow-300';
-      case 'bon': return 'bg-green-100 text-green-700 border-green-300';
-      default: return 'bg-gray-100 text-gray-700 border-gray-300';
-    }
-  };
-
-  const getDiagnosticIcon = (type: string) => {
-    switch(type) {
-      case 'dette_prestation': return <TrendingDown className="w-5 h-5 text-blue-500" />;
-      case 'sous_facturation': return <ArrowDownCircle className="w-5 h-5 text-red-500" />;
-      case 'rentabilite_faible': return <DollarSign className="w-5 h-5 text-red-500" />;
-      case 'equilibre': return <CheckCircle className="w-5 h-5 text-green-500" />;
-      default: return <AlertCircle className="w-5 h-5 text-gray-500" />;
-    }
-  };
-
-  const getSuspicionStatusIcon = (client: any) => {
-    if (client.justification?.status === 'neutralized') {
-      return <ShieldCheck className="w-4 h-4 text-green-500" />;
-    }
-    if (client.analysis?.isSuspect) {
-      return <ShieldX className="w-4 h-4 text-red-500" />;
-    }
-    return <CheckCircle className="w-4 h-4 text-green-500" />;
-  };
-
+  // Fonctions d'interaction
   const handleNeutralizeSuspicion = (client: any) => {
     if (!justificationText.trim()) return;
     
@@ -344,60 +254,70 @@ const FinanceModern = () => {
     );
     
     setJustificationText('');
-    setJustificationDialog({open: false});
-    setSelectedFilters(prev => ({...prev}));
+    setJustificationDialog({open: false, client: null});
   };
 
   const handleReactivateSuspicion = (client: any) => {
     ruleEngine.reactivateSuspicion(client.id, client.analysis.ruleTriggered?.id || 'unknown');
-    setSelectedFilters(prev => ({...prev}));
+  };
+
+  const resetFilters = () => {
+    setSelectedFilters({
+      typeFacturation: 'tous',
+      gestionnaire: 'tous',
+      statut: 'tous',
+      affichage: 'tous',
+      diagnostic: 'tous',
+      tri: 'nom'
+    });
+    setSearchTerm('');
+    setCurrentPage(1);
+  };
+
+  const getDiagnosticIcon = (type: string) => {
+    switch (type) {
+      case 'dette_prestation': return <AlertCircle className="w-4 h-4 text-orange-500" />;
+      case 'sous_facturation': return <TrendingDown className="w-4 h-4 text-red-500" />;
+      case 'rentabilite_faible': return <Euro className="w-4 h-4 text-purple-500" />;
+      default: return <CheckCircle className="w-4 h-4 text-green-500" />;
+    }
   };
 
   return (
     <DashboardLayout>
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-              Finance
-            </h1>
-            <p className="text-muted-foreground mt-1">
-              Analyse financière complète et suivi de la rentabilité
-            </p>
-          </div>
-          <div className="flex items-center space-x-3">
-            <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
-              Année {selectedPeriod}
-            </Badge>
-            <Button variant="outline" size="sm">
-              <Filter className="w-4 h-4 mr-2" />
-              Filtres
-            </Button>
-          </div>
-        </div>
+      <div className="min-h-screen bg-gray-50">
+      <PageHeader 
+        title="Finance"
+        description="Gestion financière et analyse de performance"
+        icon={DollarSign}
+      />
 
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+      <div className="w-full max-w-none px-4 py-8">
+        <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="overview">Vue d'Ensemble</TabsTrigger>
-            <TabsTrigger value="analysis">Analyse</TabsTrigger>
+            <TabsTrigger value="analysis">Analyse Financière</TabsTrigger>
             <TabsTrigger value="budgets">Budgets</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="overview" className="space-y-6">
-            {/* Vue d'ensemble avec métriques principales */}
+          <TabsContent value="overview" className="space-y-8">
+
+            {/* Header avec métriques principales */}
             <div className="bg-gradient-to-br from-blue-500 via-purple-500 to-teal-500 rounded-3xl p-8 text-white relative overflow-hidden">
               <div className="absolute inset-0 bg-black/10 backdrop-blur-sm"></div>
+              <div className="absolute top-4 right-4 w-32 h-32 bg-white/10 rounded-full blur-2xl"></div>
               <div className="relative z-10">
                 <h2 className="text-3xl font-bold mb-2">Vue d'Ensemble Financière</h2>
                 <p className="text-blue-100 mb-6">Analyse complète de la performance financière {selectedPeriod}</p>
                 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  {/* Encours Total */}
                   <div className="bg-white/20 backdrop-blur-sm rounded-2xl p-4">
                     <div className="flex items-center space-x-3">
                       <Wallet className="w-8 h-8 text-green-300" />
                       <div>
                         <p className="text-sm text-blue-100">Encours Total</p>
-                        <p className="text-2xl font-bold">{(encoursDetaille.total / 1000).toFixed(0)}K€</p>
+                        <p className="text-2xl font-bold">{(financeOverviewData.encoursDetaille.total / 1000).toFixed(0)}K€</p>
                       </div>
                     </div>
                   </div>
@@ -471,7 +391,7 @@ const FinanceModern = () => {
                         <span className="font-medium">Total Horaire</span>
                       </div>
                       <div className="text-right">
-                        <p className="text-2xl font-bold text-blue-800">{(budgetHoraireTotal / 1000000).toFixed(2)}M€</p>
+                        <p className="text-2xl font-bold text-blue-800">{(budgetHoraireTotal / 1000).toFixed(0)}K h</p>
                         <Badge className="bg-blue-100 text-blue-700">100%</Badge>
                       </div>
                     </div>
@@ -482,7 +402,7 @@ const FinanceModern = () => {
                         <span className="font-medium">Belgique</span>
                       </div>
                       <div className="text-right">
-                        <p className="text-xl font-bold text-green-800">{(budgetHoraireBelgique / 1000000).toFixed(2)}M€</p>
+                        <p className="text-xl font-bold text-green-800">{(budgetHoraireBelgique / 1000).toFixed(1)}K h</p>
                         <Badge variant="outline" className="border-green-300 text-green-700">
                           {((budgetHoraireBelgique / budgetHoraireTotal) * 100).toFixed(1)}%
                         </Badge>
@@ -495,7 +415,7 @@ const FinanceModern = () => {
                         <span className="font-medium">Maroc</span>
                       </div>
                       <div className="text-right">
-                        <p className="text-xl font-bold text-orange-800">{(budgetHoraireMaroc / 1000).toFixed(0)}K€</p>
+                        <p className="text-xl font-bold text-orange-800">{(budgetHoraireMaroc / 1000).toFixed(1)}K h</p>
                         <Badge variant="outline" className="border-orange-300 text-orange-700">
                           {((budgetHoraireMaroc / budgetHoraireTotal) * 100).toFixed(1)}%
                         </Badge>
@@ -545,7 +465,7 @@ const FinanceModern = () => {
                         <span className="font-medium">Total Horaire</span>
                       </div>
                       <div className="text-right">
-                        <p className="text-2xl font-bold text-green-800">{(realiseHoraireTotal / 1000000).toFixed(2)}M€</p>
+                        <p className="text-2xl font-bold text-green-800">{(realiseHoraireTotal / 1000).toFixed(1)}K h</p>
                         <Badge className={`${parseFloat(tauxRealisationHoraire) >= 85 ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700'}`}>
                           {tauxRealisationHoraire}%
                         </Badge>
@@ -558,7 +478,7 @@ const FinanceModern = () => {
                         <span className="font-medium">Belgique</span>
                       </div>
                       <div className="text-right">
-                        <p className="text-xl font-bold text-green-800">{(realiseHoraireBelgique / 1000000).toFixed(2)}M€</p>
+                        <p className="text-xl font-bold text-green-800">{(realiseHoraireBelgique / 1000).toFixed(1)}K h</p>
                         <Badge variant="outline" className="border-green-300 text-green-700">
                           {((realiseHoraireBelgique / budgetHoraireBelgique) * 100).toFixed(1)}%
                         </Badge>
@@ -571,7 +491,7 @@ const FinanceModern = () => {
                         <span className="font-medium">Maroc</span>
                       </div>
                       <div className="text-right">
-                        <p className="text-xl font-bold text-orange-800">{(realiseHoraireMaroc / 1000).toFixed(0)}K€</p>
+                        <p className="text-xl font-bold text-orange-800">{(realiseHoraireMaroc / 1000).toFixed(1)}K h</p>
                         <Badge variant="outline" className="border-orange-300 text-orange-700">
                           {((realiseHoraireMaroc / budgetHoraireMaroc) * 100).toFixed(1)}%
                         </Badge>
@@ -640,7 +560,7 @@ const FinanceModern = () => {
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                  {Object.entries(encoursDetaille.repartition).map(([periode, data]) => (
+                  {Object.entries(financeOverviewData.encoursDetaille.repartition).map(([periode, data]) => (
                     <div key={periode} className="text-center p-6 bg-white rounded-2xl border border-gray-200 shadow-sm">
                       <div className="mb-3">
                         <div className={`w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-2 ${
@@ -668,219 +588,274 @@ const FinanceModern = () => {
                           style={{ width: `${data.pourcentage}%` }}
                         />
                       </div>
-                      <p className="text-xs text-gray-500 mt-1">{data.pourcentage.toFixed(1)}%</p>
+                      <p className="text-xs text-gray-500 mt-1">{data.pourcentage}%</p>
                     </div>
                   ))}
                 </div>
               </CardContent>
             </Card>
 
-            {/* Clients Suspects */}
-            <Card className="bg-gradient-to-br from-red-50 to-pink-50 border-0 shadow-xl">
-              <CardHeader>
-                <CardTitle className="flex items-center justify-between text-red-800">
-                  <div className="flex items-center space-x-2">
-                    <AlertTriangle className="w-6 h-6" />
-                    <span>Clients Suspects</span>
-                  </div>
-                  <Badge variant="destructive">{clientsSuspects.nombre}</Badge>
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {clientsSuspects.liste.slice(0, 3).map((client, index) => (
-                    <div key={index} className="flex items-center justify-between p-4 bg-white rounded-xl border border-red-200 hover:shadow-lg transition-shadow">
-                      <div className="flex items-center space-x-4">
-                        <div className={`w-12 h-12 rounded-full flex items-center justify-center text-white font-bold ${
+            {/* Clients Suspects et Répartition Géographique */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              {/* Clients Suspects */}
+              <Card className="bg-gradient-to-br from-slate-50 to-gray-50 border-0 shadow-xl">
+                <CardHeader>
+                  <CardTitle className="flex items-center space-x-2 text-gray-800">
+                    <AlertTriangle className="w-6 h-6 text-amber-600" />
+                    <span>Clients Suspects ({clientsSuspects.nombre})</span>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {clientsSuspects.liste.map((client, index) => (
+                    <div key={index} className="flex items-center justify-between p-4 bg-white rounded-xl shadow-sm border border-gray-200">
+                      <div className="flex items-center space-x-3">
+                        <div className={`w-3 h-3 rounded-full ${
                           client.gravite === 'high' ? 'bg-red-500' :
-                          client.gravite === 'medium' ? 'bg-orange-500' : 'bg-yellow-500'
-                        }`}>
-                          {client.nom.substring(0, 2)}
-                        </div>
+                          client.gravite === 'medium' ? 'bg-yellow-500' : 'bg-orange-500'
+                        }`}></div>
                         <div>
-                          <p className="font-bold text-gray-900">{client.nom}</p>
+                          <p className="font-medium text-gray-900">{client.nom}</p>
                           <p className="text-sm text-gray-600">{client.probleme}</p>
                         </div>
                       </div>
                       <div className="text-right">
-                        <Badge variant={client.gravite === 'high' ? 'destructive' : client.gravite === 'medium' ? 'secondary' : 'outline'}>
-                          {client.gravite === 'high' ? 'Critique' : client.gravite === 'medium' ? 'Moyen' : 'Faible'}
+                        <p className="font-bold text-orange-600">{(client.montant / 1000).toFixed(0)}K€</p>
+                        <Badge 
+                          className={`${
+                            client.gravite === 'high' ? 'bg-red-100 text-red-700' :
+                            client.gravite === 'medium' ? 'bg-yellow-100 text-yellow-700' :
+                            'bg-orange-100 text-orange-700'
+                          }`}
+                        >
+                          {client.gravite === 'high' ? 'Urgent' : 
+                           client.gravite === 'medium' ? 'Moyen' : 'Faible'}
                         </Badge>
-                        <p className="text-sm font-bold text-red-600 mt-1">
-                          €{(client.montant / 1000).toFixed(1)}K
-                        </p>
                       </div>
                     </div>
                   ))}
-                  <Button 
-                    variant="outline" 
-                    className="w-full mt-4"
-                    onClick={() => setActiveTab('analysis')}
-                  >
-                    <Eye className="w-4 h-4 mr-2" />
-                    Voir l'analyse complète
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Impact Clients */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-              {/* Clients Entrants */}
-              <Card className="bg-gradient-to-br from-green-50 to-teal-50 border-0 shadow-xl">
-                <CardHeader>
-                  <CardTitle className="flex items-center space-x-2 text-green-800">
-                    <ArrowUpCircle className="w-6 h-6" />
-                    <span>Clients Entrants</span>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    <div className="text-center">
-                      <p className="text-4xl font-bold text-green-600 mb-2">
-                        +{(impactClientsEntrants.caAnneeEnCours / 1000).toFixed(0)}K€
-                      </p>
-                      <p className="text-sm text-gray-600">CA 2024</p>
-                    </div>
-                    <div className="space-y-3">
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm text-gray-600">CA 2025 prévu:</span>
-                        <span className="font-bold text-green-700">+{(impactClientsEntrants.caAnneeSuivante / 1000).toFixed(0)}K€</span>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm text-gray-600">Nouveaux clients:</span>
-                        <Badge className="bg-green-100 text-green-700">{impactClientsEntrants.nombreClients}</Badge>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm text-gray-600">CA moyen/client:</span>
-                        <span className="font-medium">{(impactClientsEntrants.caAnneeEnCours / impactClientsEntrants.nombreClients / 1000).toFixed(1)}K€</span>
-                      </div>
-                    </div>
+                  
+                  <div className="pt-4 border-t border-orange-200">
+                    <Button 
+                      variant="outline" 
+                      className="w-full text-orange-700 border-orange-300 hover:bg-orange-50"
+                      onClick={() => setActiveTab('analysis')}
+                    >
+                      <Eye className="w-4 h-4 mr-2" />
+                      Voir l'analyse financière complète
+                    </Button>
                   </div>
                 </CardContent>
               </Card>
 
-              {/* Clients Sortants */}
-              <Card className="bg-gradient-to-br from-red-50 to-pink-50 border-0 shadow-xl">
+              {/* Répartition géographique */}
+              <Card className="bg-gradient-to-br from-teal-50 to-cyan-50 border-0 shadow-xl">
                 <CardHeader>
-                  <CardTitle className="flex items-center space-x-2 text-red-800">
-                    <ArrowDownCircle className="w-6 h-6" />
-                    <span>Clients Sortants</span>
+                  <CardTitle className="flex items-center space-x-2 text-teal-800">
+                    <PieChart className="w-6 h-6" />
+                    <span>Répartition Géographique</span>
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-4">
-                    <div className="text-center">
-                      <p className="text-4xl font-bold text-red-600 mb-2">
-                        -{(impactClientsSortants.caAnneeEnCours / 1000).toFixed(0)}K€
-                      </p>
-                      <p className="text-sm text-gray-600">Perte CA 2024</p>
-                    </div>
-                    <div className="space-y-3">
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm text-gray-600">Impact 2025:</span>
-                        <span className="font-bold text-red-700">-{(impactClientsSortants.caAnneeSuivante / 1000).toFixed(0)}K€</span>
+                  <div className="space-y-6">
+                    {repartitionGeographique.map((region, index) => (
+                      <div key={index} className="flex items-center justify-between">
+                        <div className="flex items-center space-x-3">
+                          <div 
+                            className="w-4 h-4 rounded-full" 
+                            style={{ backgroundColor: region.couleur }}
+                          ></div>
+                          <span className="font-medium text-gray-700">{region.pays}</span>
+                        </div>
+                        <div className="text-right">
+                          <p className="font-bold text-gray-900">{(region.montant / 1000000).toFixed(2)}M€</p>
+                          <p className="text-sm text-gray-600">{region.pourcentage}%</p>
+                        </div>
                       </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm text-gray-600">Clients perdus:</span>
-                        <Badge variant="destructive">{impactClientsSortants.nombreClients}</Badge>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm text-gray-600">Perte moy/client:</span>
-                        <span className="font-medium">{(impactClientsSortants.caAnneeEnCours / impactClientsSortants.nombreClients / 1000).toFixed(1)}K€</span>
-                      </div>
-                    </div>
+                    ))}
                   </div>
-                </CardContent>
-              </Card>
-
-              {/* Clients à Risque */}
-              <Card className="bg-gradient-to-br from-orange-50 to-yellow-50 border-0 shadow-xl">
-                <CardHeader>
-                  <CardTitle className="flex items-center space-x-2 text-orange-800">
-                    <AlertTriangle className="w-6 h-6" />
-                    <span>Clients à Risque</span>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    <div className="text-center">
-                      <p className="text-4xl font-bold text-orange-600 mb-2">
-                        {(caClientsRisque / 1000).toFixed(0)}K€
-                      </p>
-                      <p className="text-sm text-gray-600">CA à risque</p>
-                    </div>
-                    <div className="space-y-3">
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm text-gray-600">Clients à risque:</span>
-                        <Badge className="bg-orange-100 text-orange-700">{nombreClientsRisque}</Badge>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm text-gray-600">CA moyen/client:</span>
-                        <span className="font-medium">{(caClientsRisque / nombreClientsRisque / 1000).toFixed(1)}K€</span>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm text-gray-600">% du CA total:</span>
-                        <span className="font-bold text-orange-700">{((caClientsRisque / realiseEconomiqueAnnuel) * 100).toFixed(1)}%</span>
-                      </div>
+                  <div className="mt-6 pt-4 border-t">
+                    <div className="flex space-x-2">
+                      {repartitionGeographique.map((region, index) => (
+                        <div 
+                          key={index}
+                          className="h-3 rounded-full first:rounded-l-full last:rounded-r-full"
+                          style={{ 
+                            backgroundColor: region.couleur,
+                            width: `${region.pourcentage}%`
+                          }}
+                        ></div>
+                      ))}
                     </div>
                   </div>
                 </CardContent>
               </Card>
             </div>
 
-            {/* Révisions de Forfaits en Cours */}
-            <Card className="bg-gradient-to-br from-amber-50 to-orange-50 border-0 shadow-xl">
-              <CardHeader>
-                <CardTitle className="flex items-center justify-between text-amber-800">
-                  <div className="flex items-center space-x-2">
-                    <Edit className="w-6 h-6" />
-                    <span>Révisions de Forfaits en Cours</span>
+            {/* Dossiers les plus/moins rentables */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              {/* Dossiers les plus rentables */}
+              <Card className="bg-gradient-to-br from-green-50 to-emerald-50 border-0 shadow-xl">
+                <CardHeader>
+                  <CardTitle className="flex items-center space-x-2 text-green-800">
+                    <Award className="w-6 h-6" />
+                    <span>Dossiers les Plus Rentables</span>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {dossiersLesPlusRentables.map((dossier, index) => (
+                      <div key={index} className="flex items-center justify-between p-4 bg-white rounded-xl shadow-sm border border-green-100">
+                        <div className="flex items-center space-x-3">
+                          <div className="flex items-center justify-center w-8 h-8 bg-green-100 rounded-full">
+                            <span className="text-sm font-bold text-green-600">#{index + 1}</span>
+                          </div>
+                          <div>
+                            <p className="font-medium text-gray-900">{dossier.nom}</p>
+                            <p className="text-sm text-gray-500">CA: {(dossier.ca / 1000).toFixed(0)}K€ • Marge: {(dossier.marge / 1000).toFixed(0)}K€</p>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <div className="flex items-center space-x-2">
+                            <Badge className="bg-green-100 text-green-700">{dossier.rentabilite}%</Badge>
+                            <Badge variant="outline" className="border-green-300 text-green-700">
+                              {dossier.evolution}
+                            </Badge>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
                   </div>
-                  <Badge className="bg-amber-100 text-amber-700">{revisionsForfaits.length}</Badge>
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {revisionsForfaits.slice(0, 4).map((revision, index) => (
-                    <div key={index} className="flex items-center justify-between p-4 bg-white rounded-xl border border-amber-200 hover:shadow-lg transition-shadow">
-                      <div className="flex items-center space-x-4">
-                        <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-bold ${
-                          revision.priorite === 'haute' ? 'bg-red-500' :
-                          revision.priorite === 'moyenne' ? 'bg-orange-500' : 'bg-yellow-500'
-                        }`}>
-                          {revision.client.substring(0, 2)}
+                </CardContent>
+              </Card>
+
+              {/* Dossiers les moins rentables */}
+              <Card className="bg-gradient-to-br from-red-50 to-pink-50 border-0 shadow-xl">
+                <CardHeader>
+                  <CardTitle className="flex items-center space-x-2 text-red-800">
+                    <TrendingDown className="w-6 h-6" />
+                    <span>Dossiers les Moins Rentables</span>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {dossiersLesMoinsRentables.map((dossier, index) => (
+                      <div key={index} className="flex items-center justify-between p-4 bg-white rounded-xl shadow-sm border border-red-100">
+                        <div className="flex items-center space-x-3">
+                          <div className="flex items-center justify-center w-8 h-8 bg-red-100 rounded-full">
+                            <AlertTriangle className="w-4 h-4 text-red-600" />
+                          </div>
+                          <div>
+                            <p className="font-medium text-gray-900">{dossier.nom}</p>
+                            <p className="text-sm text-gray-500">CA: {(dossier.ca / 1000).toFixed(0)}K€ • Marge: {(dossier.marge / 1000).toFixed(0)}K€</p>
+                          </div>
                         </div>
-                        <div>
-                          <p className="font-bold text-gray-900">{revision.client}</p>
-                          <p className="text-sm text-gray-600">{revision.motif}</p>
+                        <div className="text-right">
+                          <div className="flex items-center space-x-2">
+                            <Badge className="bg-red-100 text-red-700">{dossier.rentabilite}%</Badge>
+                            <Badge variant="outline" className="border-red-300 text-red-700">
+                              {dossier.evolution}
+                            </Badge>
+                          </div>
                         </div>
                       </div>
-                      <div className="text-right">
-                        <p className="text-lg font-bold text-amber-600">
-                          {revision.forfaitActuel}€ → {revision.forfaitPropose}€
-                        </p>
-                        <Badge variant={revision.priorite === 'haute' ? 'destructive' : revision.priorite === 'moyenne' ? 'secondary' : 'outline'}>
-                          {revision.priorite}
-                        </Badge>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Impact Clients Entrants/Sortants sur 2 ans */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              <Card className="bg-gradient-to-br from-orange-50 to-red-50 border-0 shadow-xl">
+                <CardHeader>
+                  <CardTitle className="flex items-center space-x-2 text-orange-800">
+                    <ArrowDownCircle className="w-6 h-6" />
+                    <span>Impact Clients Sortants</span>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  {/* Impact année en cours */}
+                  <div className="p-4 bg-gradient-to-r from-orange-100 to-red-100 rounded-xl border border-orange-200">
+                    <div className="flex items-center justify-between mb-3">
+                      <div>
+                        <p className="text-sm font-medium text-orange-700">Année en cours (2024)</p>
+                        <p className="text-3xl font-bold text-orange-800">{(caClientsSortants.anneeEnCours / 1000).toFixed(0)}K€</p>
                       </div>
+                      <Badge className="bg-orange-100 text-orange-700">{impactSortantsAnneeEnCours}% du CA</Badge>
                     </div>
-                  ))}
-                  {revisionsForfaits.length > 4 && (
-                    <Button variant="outline" className="w-full">
-                      <MoreHorizontal className="w-4 h-4 mr-2" />
-                      Voir {revisionsForfaits.length - 4} autres révisions
-                    </Button>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
+                    <Progress value={parseFloat(impactSortantsAnneeEnCours)} className="h-2" />
+                  </div>
+
+                  {/* Impact année prochaine */}
+                  <div className="p-4 bg-gradient-to-r from-red-100 to-pink-100 rounded-xl border border-red-200">
+                    <div className="flex items-center justify-between mb-3">
+                      <div>
+                        <p className="text-sm font-medium text-red-700">Année prochaine (2025)</p>
+                        <p className="text-3xl font-bold text-red-800">{(caClientsSortants.anneeProchaine / 1000).toFixed(0)}K€</p>
+                      </div>
+                      <Badge className="bg-red-100 text-red-700">{impactSortantsAnneeProchaine}% du budget</Badge>
+                    </div>
+                    <Progress value={parseFloat(impactSortantsAnneeProchaine)} className="h-2" />
+                  </div>
+
+                  {/* Total impact */}
+                  <div className="pt-4 border-t border-orange-200">
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="font-medium text-gray-600">Impact total sur 2 ans</span>
+                      <span className="font-bold text-orange-600">{(caClientsSortants.total / 1000).toFixed(0)}K€</span>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="bg-gradient-to-br from-green-50 to-emerald-50 border-0 shadow-xl">
+                <CardHeader>
+                  <CardTitle className="flex items-center space-x-2 text-green-800">
+                    <ArrowUpCircle className="w-6 h-6" />
+                    <span>Apport Clients Entrants</span>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  {/* Apport année en cours */}
+                  <div className="p-4 bg-gradient-to-r from-green-100 to-emerald-100 rounded-xl border border-green-200">
+                    <div className="flex items-center justify-between mb-3">
+                      <div>
+                        <p className="text-sm font-medium text-green-700">Année en cours (2024)</p>
+                        <p className="text-3xl font-bold text-green-800">{(caClientsEntrants.anneeEnCours / 1000).toFixed(0)}K€</p>
+                      </div>
+                      <Badge className="bg-green-100 text-green-700">{apportEntrantsAnneeEnCours}% du CA</Badge>
+                    </div>
+                    <Progress value={parseFloat(apportEntrantsAnneeEnCours)} className="h-2" />
+                  </div>
+
+                  {/* Apport année prochaine */}
+                  <div className="p-4 bg-gradient-to-r from-emerald-100 to-teal-100 rounded-xl border border-emerald-200">
+                    <div className="flex items-center justify-between mb-3">
+                      <div>
+                        <p className="text-sm font-medium text-emerald-700">Année prochaine (2025)</p>
+                        <p className="text-3xl font-bold text-emerald-800">{(caClientsEntrants.anneeProchaine / 1000).toFixed(0)}K€</p>
+                      </div>
+                      <Badge className="bg-emerald-100 text-emerald-700">{apportEntrantsAnneeProchaine}% du budget</Badge>
+                    </div>
+                    <Progress value={parseFloat(apportEntrantsAnneeProchaine)} className="h-2" />
+                  </div>
+
+                  {/* Total apport */}
+                  <div className="pt-4 border-t border-green-200">
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="font-medium text-gray-600">Apport total sur 2 ans</span>
+                      <span className="font-bold text-green-600">{(caClientsEntrants.total / 1000).toFixed(0)}K€</span>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
           </TabsContent>
 
           <TabsContent value="analysis" className="space-y-6">
             {/* Analyse Financière Intelligente */}
             <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
-              <div className="mb-8">
+              <div className="w-full px-4 sm:px-6 lg:px-8 mb-8">
                 <div className="flex items-center justify-between mb-6">
                   <div>
                     <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
@@ -890,282 +865,190 @@ const FinanceModern = () => {
                   </div>
                 </div>
 
-                <div className="relative max-w-md">
-                  <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-                  <Input
-                    placeholder="Rechercher un client..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-12 pr-4 py-3 bg-white/80 backdrop-blur-sm border-0 shadow-lg rounded-2xl"
-                  />
-                </div>
-              </div>
-
-              {/* Section Filtres Moderne et Compacte */}
-              <div className="bg-gradient-to-r from-white/95 to-blue-50/95 backdrop-blur-xl rounded-3xl p-6 shadow-xl border border-blue-100/50 mb-6">
-                
-                {/* Ligne 1: Filtres de Statut avec Explications et Diagnostics */}
-                <div className="flex items-start justify-between mb-6">
-                  {/* Section Gauche: Filtres Statut + Diagnostics */}
-                  <div className="flex flex-col space-y-4">
-                    
-                    {/* Filtres Statut avec explications claires */}
-                    <div className="flex items-center space-x-3">
-                      <div className="flex items-center bg-white/70 backdrop-blur-sm rounded-2xl p-1 shadow-lg border border-white/20">
-                        <button
-                          onClick={() => setSelectedFilters(prev => ({
-                            ...prev, 
-                            statut: prev.statut === 'suspect' ? 'tous' : 'suspect',
-                            affichage: prev.statut === 'suspect' ? 'tous' : 'suspects',
-                            diagnostic: 'tous'
-                          }))}
-                          className={`group flex items-center space-x-3 rounded-xl px-4 py-2.5 text-sm font-semibold transition-all duration-300 ${
-                            selectedFilters.statut === 'suspect' 
-                              ? 'bg-gradient-to-r from-red-500 to-red-600 text-white shadow-lg shadow-red-500/30 scale-105' 
-                              : 'text-red-600 hover:bg-red-50 hover:scale-105'
-                          }`}
+                {/* Filtres modernisés */}
+                <div className="bg-white/95 backdrop-blur-xl rounded-3xl p-6 shadow-xl border border-white/50 mb-6">
+                  {/* Ligne 1: Filtres de Statut avec Explications et Diagnostics */}
+                  <div className="flex items-start justify-between mb-6">
+                    {/* Section Gauche: Filtres Statut + Diagnostics */}
+                    <div className="flex flex-col space-y-4">
+                      {/* Filtres Statut avec explications claires */}
+                      <div className="flex items-center space-x-3">
+                        <Button 
+                          variant={selectedFilters.statut === 'suspects' ? 'default' : 'outline'}
+                          size="sm"
+                          className={`${selectedFilters.statut === 'suspects' ? 'bg-red-500 hover:bg-red-600' : 'hover:bg-red-50'} transition-all duration-200`}
+                          onClick={() => setSelectedFilters(prev => ({...prev, statut: prev.statut === 'suspects' ? 'tous' : 'suspects'}))}
                         >
-                          <div className={`w-3 h-3 rounded-full transition-all ${
-                            selectedFilters.statut === 'suspect' ? 'bg-white' : 'bg-red-500'
-                          }`}></div>
-                          <div className="flex items-center space-x-2">
-                            <span className="font-bold">{overviewStats.counts.suspects}</span>
-                            <span>Suspects</span>
-                          </div>
-                        </button>
-                        
-                        <button
-                          onClick={() => setSelectedFilters(prev => ({
-                            ...prev,
-                            statut: prev.statut === 'attention' ? 'tous' : 'attention',
-                            affichage: prev.statut === 'attention' ? 'tous' : 'a_surveiller',
-                            diagnostic: 'tous'
-                          }))}
-                          className={`group flex items-center space-x-3 rounded-xl px-4 py-2.5 text-sm font-semibold transition-all duration-300 ${
-                            selectedFilters.statut === 'attention' 
-                              ? 'bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-lg shadow-orange-500/30 scale-105' 
-                              : 'text-orange-600 hover:bg-orange-50 hover:scale-105'
-                          }`}
+                          <AlertTriangle className="w-4 h-4 mr-2" />
+                          Suspects
+                          <span className="ml-2 text-xs bg-white/20 px-2 py-1 rounded-full">
+                            {overviewStats.counts.suspects}
+                          </span>
+                        </Button>
+                        <Button 
+                          variant={selectedFilters.statut === 'attention' ? 'default' : 'outline'}
+                          size="sm"
+                          className={`${selectedFilters.statut === 'attention' ? 'bg-orange-500 hover:bg-orange-600' : 'hover:bg-orange-50'} transition-all duration-200`}
+                          onClick={() => setSelectedFilters(prev => ({...prev, statut: prev.statut === 'attention' ? 'tous' : 'attention'}))}
                         >
-                          <div className={`w-3 h-3 rounded-full transition-all ${
-                            selectedFilters.statut === 'attention' ? 'bg-white' : 'bg-orange-500'
-                          }`}></div>
-                          <div className="flex items-center space-x-2">
-                            <span className="font-bold">{clientsAnalyzed.filter(c => c.statut === 'attention' && !c.justification).length}</span>
-                            <span>À surveiller</span>
-                          </div>
-                        </button>
-                        
-                        <button
-                          onClick={() => setSelectedFilters(prev => ({
-                            ...prev,
-                            affichage: prev.affichage === 'neutralises' ? 'tous' : 'neutralises',
-                            diagnostic: 'tous'
-                          }))}
-                          className={`group flex items-center space-x-3 rounded-xl px-4 py-2.5 text-sm font-semibold transition-all duration-300 ${
-                            selectedFilters.affichage === 'neutralises' 
-                              ? 'bg-gradient-to-r from-yellow-500 to-yellow-600 text-white shadow-lg shadow-yellow-500/30 scale-105' 
-                              : 'text-yellow-600 hover:bg-yellow-50 hover:scale-105'
-                          }`}
+                          <Users className="w-4 h-4 mr-2" />
+                          À surveiller
+                          <span className="ml-2 text-xs bg-white/20 px-2 py-1 rounded-full">
+                            {clientsAnalyzed.filter(c => c.statut === 'attention' && !c.justification).length}
+                          </span>
+                        </Button>
+                        <Button 
+                          variant={selectedFilters.statut === 'neutralises' ? 'default' : 'outline'}
+                          size="sm"
+                          className={`${selectedFilters.statut === 'neutralises' ? 'bg-yellow-500 hover:bg-yellow-600' : 'hover:bg-yellow-50'} transition-all duration-200`}
+                          onClick={() => setSelectedFilters(prev => ({...prev, statut: prev.statut === 'neutralises' ? 'tous' : 'neutralises'}))}
                         >
-                          <div className={`w-3 h-3 rounded-full transition-all ${
-                            selectedFilters.affichage === 'neutralises' ? 'bg-white' : 'bg-yellow-500'
-                          }`}></div>
-                          <div className="flex items-center space-x-2">
-                            <span className="font-bold">{clientsFiltres.filter(c => c.justification?.status === 'neutralized').length}</span>
-                            <span>Neutralisés</span>
-                          </div>
-                        </button>
-                        
-                        <button
-                          onClick={() => setSelectedFilters(prev => ({
-                            ...prev,
-                            statut: prev.statut === 'bon' ? 'tous' : 'bon',
-                            diagnostic: 'tous'
-                          }))}
-                          className={`group flex items-center space-x-3 rounded-xl px-4 py-2.5 text-sm font-semibold transition-all duration-300 ${
-                            selectedFilters.statut === 'bon' 
-                              ? 'bg-gradient-to-r from-green-500 to-green-600 text-white shadow-lg shadow-green-500/30 scale-105' 
-                              : 'text-green-600 hover:bg-green-50 hover:scale-105'
-                          }`}
+                          <Filter className="w-4 h-4 mr-2" />
+                          Neutralisés
+                          <span className="ml-2 text-xs bg-white/20 px-2 py-1 rounded-full">
+                            {clientsFiltres.filter(c => c.justification?.status === 'neutralized').length}
+                          </span>
+                        </Button>
+                        <Button 
+                          variant={selectedFilters.statut === 'sains' ? 'default' : 'outline'}
+                          size="sm"
+                          className={`${selectedFilters.statut === 'sains' ? 'bg-green-500 hover:bg-green-600' : 'hover:bg-green-50'} transition-all duration-200`}
+                          onClick={() => setSelectedFilters(prev => ({...prev, statut: prev.statut === 'sains' ? 'tous' : 'sains'}))}
                         >
-                          <div className={`w-3 h-3 rounded-full transition-all ${
-                            selectedFilters.statut === 'bon' ? 'bg-white' : 'bg-green-500'
-                          }`}></div>
-                          <div className="flex items-center space-x-2">
-                            <span className="font-bold">{overviewStats.counts.sains}</span>
-                            <span>Sains</span>
-                          </div>
-                        </button>
+                          <CheckCircle className="w-4 h-4 mr-2" />
+                          Sains
+                          <span className="ml-2 text-xs bg-white/20 px-2 py-1 rounded-full">
+                            {overviewStats.counts.sains}
+                          </span>
+                        </Button>
                       </div>
                       
                       {/* Compteur total */}
                       <div className="flex items-center space-x-3 bg-white/70 backdrop-blur-sm rounded-2xl px-4 py-2.5 shadow-lg border border-white/20">
                         <div className="flex items-center space-x-2">
-                          <div className="w-3 h-3 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full"></div>
-                          <span className="text-sm font-bold text-gray-700">Total:</span>
-                          <span className="text-lg font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                            {clientsFiltres.length}
-                          </span>
+                          <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
+                          <span className="text-sm font-medium text-gray-700">Total filtré:</span>
+                          <span className="font-bold text-blue-600">{clientsFiltres.length}</span>
+                          <span className="text-xs text-gray-500">/ {clientsAnalyzed.length}</span>
                         </div>
                       </div>
                     </div>
 
-                    {/* Filtres Diagnostics - Directement liés aux statuts */}
-                    {(selectedFilters.statut !== 'tous' || selectedFilters.affichage !== 'tous') && (
-                      <div className="ml-4">
-                        <div className="flex items-center space-x-3 mb-3">
-                          <div className="w-2 h-2 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full"></div>
-                          <span className="text-xs font-bold text-gray-600 uppercase tracking-wider">Diagnostics spécifiques</span>
-                          <div className="flex-1 h-px bg-gradient-to-r from-gray-200 to-transparent"></div>
-                        </div>
-                        <div className="flex items-center space-x-3 flex-wrap gap-2">
-                          {(() => {
-                            let availableDiagnostics = [];
-                            
-                            if (selectedFilters.statut === 'suspect') {
-                              availableDiagnostics = [
-                                { key: 'sous_facturation', label: 'Sous-Facturation', icon: ArrowDownCircle, color: 'red' },
-                                { key: 'rentabilite_faible', label: 'Rentabilité Faible', icon: DollarSign, color: 'red' }
-                              ];
-                            } else if (selectedFilters.statut === 'attention') {
-                              availableDiagnostics = [
-                                { key: 'dette_prestation', label: 'Dette Prestation', icon: TrendingDown, color: 'orange' }
-                              ];
-                            } else if (selectedFilters.statut === 'bon') {
-                              availableDiagnostics = [
-                                { key: 'equilibre', label: 'Équilibre', icon: CheckCircle, color: 'green' }
-                              ];
-                            } else if (selectedFilters.affichage === 'neutralises') {
-                              availableDiagnostics = [
-                                { key: 'neutralise', label: 'Neutralisé', icon: Shield, color: 'yellow' }
-                              ];
-                            } else {
-                              availableDiagnostics = [
-                                { key: 'sous_facturation', label: 'Sous-Facturation', icon: ArrowDownCircle, color: 'red' },
-                                { key: 'rentabilite_faible', label: 'Rentabilité Faible', icon: DollarSign, color: 'red' },
-                                { key: 'dette_prestation', label: 'Dette Prestation', icon: TrendingDown, color: 'orange' },
-                                { key: 'equilibre', label: 'Équilibre', icon: CheckCircle, color: 'green' }
-                              ];
-                            }
-                            
-                            return availableDiagnostics;
-                          })().map((diagnostic) => {
-                            const Icon = diagnostic.icon;
-                            const isActive = selectedFilters.diagnostic === diagnostic.key;
+                    {/* Filtres Diagnostics - Toujours visibles */}
+                    <div className="ml-4">
+                      <p className="text-xs font-medium text-gray-600 mb-2">Diagnostics contextuels:</p>
+                        <div className="flex flex-wrap gap-2">
+                          {[
+                            { key: 'dette_prestation', label: 'Dette prestation', icon: AlertCircle, color: 'orange' },
+                            { key: 'sous_facturation', label: 'Sous-facturation', icon: TrendingDown, color: 'red' },
+                            { key: 'rentabilite_faible', label: 'Rentabilité faible', icon: Euro, color: 'purple' },
+                            { key: 'facturation_insuffisante', label: 'Facturation insuffisante', icon: AlertTriangle, color: 'red' },
+                            { key: 'surveillance', label: 'À surveiller', icon: Eye, color: 'blue' },
+                            { key: 'equilibre', label: 'Équilibre', icon: CheckCircle, color: 'green' }
+                          ].map((diagnostic) => {
                             const count = clientsAnalyzed.filter(c => c.diagnostic?.type === diagnostic.key).length;
-                            
+                            const Icon = diagnostic.icon;
                             return (
-                              <button
+                              <Button
                                 key={diagnostic.key}
+                                variant={selectedFilters.diagnostic === diagnostic.key ? 'default' : 'outline'}
+                                size="sm"
+                                className={`h-8 text-xs ${selectedFilters.diagnostic === diagnostic.key ? `bg-${diagnostic.color}-500` : `hover:bg-${diagnostic.color}-50`}`}
                                 onClick={() => setSelectedFilters(prev => ({
                                   ...prev,
                                   diagnostic: prev.diagnostic === diagnostic.key ? 'tous' : diagnostic.key
                                 }))}
-                                className={`group flex items-center space-x-2 rounded-xl px-3 py-2 text-xs font-semibold transition-all duration-300 shadow-md hover:shadow-lg hover:scale-105 ${
-                                  isActive 
-                                    ? `bg-gradient-to-r from-${diagnostic.color}-500 to-${diagnostic.color}-600 text-white shadow-${diagnostic.color}-500/40` 
-                                    : `bg-white/80 backdrop-blur-sm text-${diagnostic.color}-600 hover:bg-${diagnostic.color}-50 border border-white/40`
-                                }`}
                               >
-                                <Icon className={`w-4 h-4 transition-all ${isActive ? 'text-white' : `text-${diagnostic.color}-500`}`} />
-                                <span>{diagnostic.label}</span>
-                                <div className={`flex items-center justify-center w-5 h-5 rounded-full text-xs font-bold transition-all ${
-                                  isActive ? `bg-white/20 text-white` : `bg-${diagnostic.color}-100 text-${diagnostic.color}-700`
-                                }`}>
+                                <Icon className="w-3 h-3 mr-1.5" />
+                                {diagnostic.label}
+                                <span className="ml-1.5 bg-white/20 px-1.5 py-0.5 rounded text-xs">
                                   {count}
-                                </div>
-                              </button>
+                                </span>
+                              </Button>
                             );
                           })}
                         </div>
-                      </div>
-                    )}
-                  </div>
-                  
-                  {/* Actions Principales */}
-                  <div className="flex items-center space-x-3">
-                    {/* Toggle Vue */}
-                    <div className="flex items-center bg-white/70 backdrop-blur-sm rounded-2xl p-1 shadow-lg border border-white/20">
+                    </div>
+
+                    {/* Actions Principales */}
+                    <div className="flex items-center space-x-3">
                       <Button
-                        variant={viewMode === 'overview' ? 'default' : 'ghost'}
+                        variant="outline"
                         size="sm"
-                        onClick={() => setViewMode('overview')}
-                        className={`rounded-xl h-9 px-3 transition-all duration-300 ${
-                          viewMode === 'overview' 
-                            ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg shadow-blue-500/30' 
-                            : 'hover:bg-blue-50 text-blue-600'
-                        }`}
+                        onClick={() => setViewMode(viewMode === 'overview' ? 'list' : 'overview')}
+                        className="bg-white/80 backdrop-blur-sm border-white/20 hover:bg-white hover:shadow-lg transition-all duration-200"
                       >
-                        <Grid3X3 className="w-4 h-4" />
+                        {viewMode === 'overview' ? <Eye className="w-4 h-4 mr-2" /> : <EyeOff className="w-4 h-4 mr-2" />}
+                        Vue {viewMode === 'overview' ? 'Liste' : 'Aperçu'}
                       </Button>
-                      <Button
-                        variant={viewMode === 'list' ? 'default' : 'ghost'}
-                        size="sm"
-                        onClick={() => setViewMode('list')}
-                        className={`rounded-xl h-9 px-3 transition-all duration-300 ${
-                          viewMode === 'list' 
-                            ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg shadow-blue-500/30' 
-                            : 'hover:bg-blue-50 text-blue-600'
-                        }`}
+                      
+                      <Dialog>
+                        <DialogTrigger asChild>
+                          <Button variant="outline" size="sm" className="bg-white/80 backdrop-blur-sm border-white/20 hover:bg-white hover:shadow-lg">
+                            <Settings className="w-4 h-4 mr-2" />
+                            Règles
+                          </Button>
+                        </DialogTrigger>
+                        <DialogContent className="max-w-4xl">
+                          <DialogHeader>
+                            <DialogTitle>Configuration des Règles d'Analyse</DialogTitle>
+                          </DialogHeader>
+                          <div className="grid gap-4">
+                            {ruleEngine.getRules().map((rule) => (
+                              <div key={rule.id} className="flex items-center justify-between p-4 border rounded-lg">
+                                <div>
+                                  <h4 className="font-medium">{rule.nom}</h4>
+                                  <p className="text-sm text-gray-600">{rule.description}</p>
+                                  <p className="text-xs text-gray-500 mt-1">Condition: {rule.condition}</p>
+                                </div>
+                                <div className="flex items-center space-x-2">
+                                  <Badge variant={rule.gravite === 'high' ? 'destructive' : rule.gravite === 'medium' ? 'default' : 'secondary'}>
+                                    {rule.gravite}
+                                  </Badge>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => ruleEngine.toggleRule(rule.id)}
+                                    className={rule.enabled ? 'text-green-600' : 'text-gray-400'}
+                                  >
+                                    {rule.enabled ? <CheckCircle className="w-4 h-4" /> : <XCircle className="w-4 h-4" />}
+                                  </Button>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </DialogContent>
+                      </Dialog>
+
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={resetFilters}
+                        className="bg-white/80 backdrop-blur-sm border-white/20 hover:bg-white hover:shadow-lg transition-all duration-200"
                       >
-                        <List className="w-4 h-4" />
+                        <RotateCcw className="w-4 h-4 mr-2" />
+                        Reset Filtres
                       </Button>
                     </div>
-                    
-                    {/* Bouton Règles */}
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setShowRulesConfig(true)}
-                      className="bg-white/70 backdrop-blur-sm border-white/30 shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300 rounded-2xl h-9"
-                    >
-                      <Wrench className="w-4 h-4 mr-2" />
-                      <span className="hidden sm:inline">Règles</span>
-                    </Button>
-                    
-                    {/* Reset Filtres */}
-                    {(selectedFilters.statut !== 'tous' || selectedFilters.affichage !== 'tous' || selectedFilters.diagnostic !== 'tous') && (
-                      <Button
-                        onClick={() => setSelectedFilters({
-                          typeFacturation: 'tous',
-                          gestionnaire: 'tous', 
-                          statut: 'tous',
-                          affichage: 'tous',
-                          diagnostic: 'tous'
-                        })}
-                        className="bg-gradient-to-r from-gray-500 to-gray-600 text-white shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300 rounded-2xl h-9 px-3"
-                      >
-                        <XCircle className="w-4 h-4 mr-2" />
-                        <span className="hidden sm:inline">Reset</span>
-                      </Button>
-                    )}
                   </div>
-                </div>
 
-                {/* Ligne 2: Filtres Secondaires - Layout plus compact */}
-                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                  <div className="space-y-2">
-                    <label className="text-xs font-semibold text-gray-600 uppercase tracking-wider">Type facturation</label>
-                    <Select value={selectedFilters.typeFacturation} onValueChange={(value) => setSelectedFilters({...selectedFilters, typeFacturation: value})}>
-                      <SelectTrigger className="bg-white/80 backdrop-blur-sm border-white/30 rounded-xl shadow-sm hover:shadow-md transition-all">
-                        <SelectValue />
+                  {/* Ligne 2: Filtres Secondaires - Layout aéré */}
+                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+                    <Select value={selectedFilters.typeFacturation} onValueChange={(value) => setSelectedFilters(prev => ({...prev, typeFacturation: value}))}>
+                      <SelectTrigger className="bg-white/60 border-white/30 focus:border-blue-300">
+                        <SelectValue placeholder="Type facturation" />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="tous">Tous les types</SelectItem>
                         <SelectItem value="Forfait Mensuel">Forfait Mensuel</SelectItem>
                         <SelectItem value="Forfait Annuel">Forfait Annuel</SelectItem>
-                        <SelectItem value="Forfait Trimestriel">Forfait Trimestriel</SelectItem>
                         <SelectItem value="Mission Ponctuelle">Mission Ponctuelle</SelectItem>
                       </SelectContent>
                     </Select>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <label className="text-xs font-semibold text-gray-600 uppercase tracking-wider">Gestionnaire</label>
-                    <Select value={selectedFilters.gestionnaire} onValueChange={(value) => setSelectedFilters({...selectedFilters, gestionnaire: value})}>
-                      <SelectTrigger className="bg-white/80 backdrop-blur-sm border-white/30 rounded-xl shadow-sm hover:shadow-md transition-all">
-                        <SelectValue />
+
+                    <Select value={selectedFilters.gestionnaire} onValueChange={(value) => setSelectedFilters(prev => ({...prev, gestionnaire: value}))}>
+                      <SelectTrigger className="bg-white/60 border-white/30 focus:border-blue-300">
+                        <SelectValue placeholder="Gestionnaire" />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="tous">Tous les gestionnaires</SelectItem>
@@ -1177,327 +1060,449 @@ const FinanceModern = () => {
                         <SelectItem value="Pierre">Pierre</SelectItem>
                       </SelectContent>
                     </Select>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <label className="text-xs font-semibold text-gray-600 uppercase tracking-wider">Tri</label>
-                    <Select value={sortBy} onValueChange={(value: any) => setSortBy(value)}>
-                      <SelectTrigger className="bg-white/80 backdrop-blur-sm border-white/30 rounded-xl shadow-sm hover:shadow-md transition-all">
-                        <SelectValue />
+
+                    <Select value={selectedFilters.tri} onValueChange={(value) => setSelectedFilters(prev => ({...prev, tri: value}))}>
+                      <SelectTrigger className="bg-white/60 border-white/30 focus:border-blue-300">
+                        <SelectValue placeholder="Tri" />
                       </SelectTrigger>
                       <SelectContent>
+                        <SelectItem value="nom">Nom (A-Z)</SelectItem>
+                        <SelectItem value="gestionnaire">Gestionnaire</SelectItem>
+                        <SelectItem value="ca_desc">CA (DESC)</SelectItem>
+                        <SelectItem value="ca_asc">CA (ASC)</SelectItem>
                         <SelectItem value="statut">Statut</SelectItem>
-                        <SelectItem value="diagnostic">Diagnostic</SelectItem>
-                        <SelectItem value="rentabilite">Rentabilité</SelectItem>
-                        <SelectItem value="nom">Nom</SelectItem>
                       </SelectContent>
                     </Select>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <label className="text-xs font-semibold text-gray-600 uppercase tracking-wider">Résultats</label>
-                    <Select value={itemsPerPage.toString()} onValueChange={() => {}}>
-                      <SelectTrigger className="bg-white/80 backdrop-blur-sm border-white/30 rounded-xl shadow-sm hover:shadow-md transition-all">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="12">12 par page</SelectItem>
-                        <SelectItem value="24">24 par page</SelectItem>
-                        <SelectItem value="48">48 par page</SelectItem>
-                        <SelectItem value="100">100 par page</SelectItem>
-                      </SelectContent>
-                    </Select>
+
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                      <Input
+                        placeholder="Rechercher..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="pl-10 bg-white/60 border-white/30 focus:border-blue-300"
+                      />
+                    </div>
                   </div>
                 </div>
 
-
-              </div>
-
-              {/* Grille des clients */}
-              <div className="grid gap-6 mb-8 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
-                {clientsPaginated.map((client, index) => (
-                  <div
-                    key={client.id}
-                    className="group relative overflow-hidden rounded-3xl bg-white/60 backdrop-blur-sm border-0 shadow-lg hover:shadow-2xl transition-all duration-500 cursor-pointer"
-                    onClick={() => setSelectedClient(client.id)}
-                  >
-                    <div className={`absolute top-0 left-0 w-full h-1 ${
-                      client.statut === 'suspect' ? 'bg-gradient-to-r from-red-400 to-pink-400' :
-                      client.statut === 'attention' ? 'bg-gradient-to-r from-orange-400 to-yellow-400' :
-                      client.justification?.status === 'neutralized' ? 'bg-gradient-to-r from-yellow-400 to-amber-400' :
-                      'bg-gradient-to-r from-green-400 to-emerald-400'
-                    }`} />
-                    
-                    <div className="p-6">
-                      <div className="flex items-center justify-between mb-4">
-                        <div className="flex items-center space-x-3">
-                          <div className={`w-12 h-12 rounded-2xl flex items-center justify-center text-white font-bold text-lg ${
-                            client.statut === 'suspect' ? 'bg-gradient-to-br from-red-400 to-red-600' :
-                            client.statut === 'attention' ? 'bg-gradient-to-br from-orange-400 to-orange-600' :
-                            client.justification?.status === 'neutralized' ? 'bg-gradient-to-br from-yellow-400 to-yellow-600' :
-                            'bg-gradient-to-br from-green-400 to-emerald-600'
-                          }`}>
-                            {client.nom.split(' ').map((n: string) => n[0]).join('').substring(0, 2)}
-                          </div>
-                          <div>
-                            <h3 className="font-bold text-gray-900 group-hover:text-blue-600 transition-colors">
+                {/* Grille des clients avec diagnostics colorés au milieu - LAYOUT AÉRÉ */}
+                <div className="grid gap-8 mb-8 grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                  {clientsPaginated.map((client, index) => (
+                    <Card
+                      key={client.id}
+                      className="group relative overflow-hidden rounded-3xl bg-white border-0 shadow-lg hover:shadow-2xl hover:scale-[1.02] transition-all duration-500 cursor-pointer min-h-[520px] w-full"
+                      onClick={() => setSelectedClient(client.id)}
+                    >
+                      <div className={`absolute top-0 left-0 w-full h-1 ${
+                        client.statut === 'suspect' ? 'bg-gradient-to-r from-red-400 to-pink-400' :
+                        client.statut === 'attention' ? 'bg-gradient-to-r from-orange-400 to-yellow-400' :
+                        client.justification?.status === 'neutralized' ? 'bg-gradient-to-r from-yellow-400 to-amber-400' :
+                        'bg-gradient-to-r from-green-400 to-emerald-400'
+                      }`} />
+                      
+                      <CardContent className="p-10 h-full flex flex-col justify-between">
+                        <div className="flex items-start justify-between mb-6">
+                          <div className="flex-1">
+                            <h3 className="font-bold text-2xl text-gray-900 mb-2 truncate">
                               {client.nom}
                             </h3>
-                            <p className="text-sm text-gray-500">{client.gestionnaire}</p>
+                            <p className="text-base font-medium text-gray-700">{client.gestionnaire}</p>
                           </div>
+                          <Badge variant="outline" className={
+                            client.statut === 'suspect' ? 'border-red-200 text-red-700 bg-red-50' :
+                            client.statut === 'attention' ? 'border-orange-200 text-orange-700 bg-orange-50' :
+                            client.justification?.status === 'neutralized' ? 'border-yellow-200 text-yellow-700 bg-yellow-50' :
+                            'border-green-200 text-green-700 bg-green-50'
+                          }>
+                            {client.statut === 'suspect' ? 'Suspect' :
+                             client.statut === 'attention' ? 'À surveiller' :
+                             client.justification?.status === 'neutralized' ? 'Neutralisé' : 'Sain'}
+                          </Badge>
                         </div>
-                        
-                        <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-blue-500 group-hover:translate-x-1 transition-all" />
-                      </div>
 
-                      <div className={`p-4 rounded-2xl mb-4 ${
-                        client.statut === 'suspect' ? 'bg-red-50 border border-red-100' :
-                        client.statut === 'attention' ? 'bg-orange-50 border border-orange-100' :
-                        client.justification?.status === 'neutralized' ? 'bg-yellow-50 border border-yellow-100' :
-                        'bg-green-50 border border-green-100'
-                      }`}>
-                        <div className="flex items-center space-x-2 mb-2">
-                          {getDiagnosticIcon(client.diagnostic.type)}
-                          <span className={`text-sm font-medium ${
-                            client.statut === 'suspect' ? 'text-red-700' :
-                            client.statut === 'attention' ? 'text-orange-700' :
-                            client.justification?.status === 'neutralized' ? 'text-yellow-700' :
+                        {/* Diagnostic au milieu avec couleurs - PROPORTIONS ÉQUILIBRÉES */}
+                        <div className={`p-6 rounded-2xl mb-6 text-center min-h-[140px] flex flex-col justify-center ${
+                          client.diagnostic?.urgence === 'high' ? 'bg-gradient-to-br from-red-50 to-red-100 border-2 border-red-200' :
+                          client.diagnostic?.urgence === 'medium' ? 'bg-gradient-to-br from-yellow-50 to-yellow-100 border-2 border-yellow-200' :
+                          client.diagnostic?.urgence === 'low' ? 'bg-gradient-to-br from-blue-50 to-blue-100 border-2 border-blue-200' :
+                          'bg-gradient-to-br from-green-50 to-green-100 border-2 border-green-200'
+                        }`}>
+                          <div className="flex items-center justify-center space-x-2 mb-3">
+                            <div className={`p-2 rounded-full shadow-md ${
+                              client.diagnostic?.urgence === 'high' ? 'bg-red-100' :
+                              client.diagnostic?.urgence === 'medium' ? 'bg-yellow-100' :
+                              client.diagnostic?.urgence === 'low' ? 'bg-blue-100' :
+                              'bg-green-100'
+                            }`}>
+                              {getDiagnosticIcon(client.diagnostic?.type || 'equilibre')}
+                            </div>
+                          </div>
+                          <div className={`font-semibold text-lg mb-2 ${
+                            client.diagnostic?.urgence === 'high' ? 'text-red-700' :
+                            client.diagnostic?.urgence === 'medium' ? 'text-yellow-700' :
+                            client.diagnostic?.urgence === 'low' ? 'text-blue-700' :
                             'text-green-700'
                           }`}>
-                            {client.diagnostic.type === 'dette_prestation' ? 'Dette Prestation' :
-                             client.diagnostic.type === 'sous_facturation' ? 'Sous-Facturation' :
-                             client.diagnostic.type === 'rentabilite_faible' ? 'Rentabilité Faible' :
+                            {client.diagnostic?.type === 'dette_prestation' ? 'Dette Prestation' :
+                             client.diagnostic?.type === 'sous_facturation' ? 'Sous-Facturation' :
+                             client.diagnostic?.type === 'rentabilite_faible' ? 'Rentabilité Faible' :
+                             client.diagnostic?.type === 'facturation_insuffisante' ? 'Facturation Insuffisante' :
+                             client.diagnostic?.type === 'surveillance' ? 'À Surveiller' :
                              'Équilibre Sain'}
-                          </span>
+                          </div>
+                          <p className="text-xs text-gray-600 leading-relaxed px-2">{client.diagnostic?.alerte || '✅ Équilibre financier satisfaisant'}</p>
                         </div>
-                        <p className="text-xs text-gray-600">{client.diagnostic.alerte}</p>
-                      </div>
 
-                      <div className="grid grid-cols-3 gap-3">
-                        <div className="text-center">
-                          <div className="text-xl font-bold text-gray-900">
-                            {client.realiseADate.pourcentageHeures.toFixed(0)}%
+                        {/* Métriques clés - SECTION PRINCIPALE */}
+                        <div className="grid grid-cols-3 gap-4 py-4">
+                          <div className="text-center p-5 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl border border-blue-200">
+                            <div className="text-2xl font-bold text-blue-900 mb-2">
+                              {client.realiseADate.pourcentageCA.toFixed(0)}%
+                            </div>
+                            <div className="text-sm font-medium text-blue-700">CA Réalisé</div>
                           </div>
-                          <div className="text-xs text-gray-500">Prestation</div>
-                        </div>
-                        <div className="text-center">
-                          <div className={`text-xl font-bold ${
-                            client.realiseADate.pourcentageCA > 100 ? 'text-orange-600' : 'text-blue-600'
-                          }`}>
-                            {client.realiseADate.pourcentageCA.toFixed(0)}%
+                          <div className="text-center p-5 bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl border border-green-200">
+                            <div className="text-2xl font-bold text-green-900 mb-2">
+                              {(client.realiseADate.heures > 0 ? client.realiseADate.chiffreAffaires / client.realiseADate.heures : 0).toFixed(0)}€/h
+                            </div>
+                            <div className="text-sm font-medium text-green-700">Rentabilité</div>
                           </div>
-                          <div className="text-xs text-gray-500">Facturation</div>
+                          <div className="text-center p-5 bg-gradient-to-br from-purple-50 to-violet-50 rounded-xl border border-purple-200">
+                            <div className="text-2xl font-bold text-purple-900 mb-2">
+                              {(client.realiseADate.chiffreAffaires / 1000).toFixed(0)}K€
+                            </div>
+                            <div className="text-sm font-medium text-purple-700">Chiffre d'Affaires</div>
+                          </div>
                         </div>
-                        <div className="text-center">
-                          {(() => {
-                            const tarifReel = client.realiseADate.heures > 0 
-                              ? client.realiseADate.chiffreAffaires / client.realiseADate.heures 
-                              : 0;
-                            return (
-                              <>
-                                <div className={`text-xl font-bold ${
-                                  tarifReel >= 90 ? 'text-green-600' : 'text-red-600'
-                                }`}>
-                                  {tarifReel.toFixed(0)}€
-                                </div>
-                                <div className="text-xs text-gray-500">/heure</div>
-                              </>
-                            );
-                          })()}
-                        </div>
-                      </div>
 
-                      {/* Actions pour suspects */}
-                      {client.analysis?.isSuspect && client.analysis?.canBeNeutralized && !client.justification && (
-                        <div className="mt-4">
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setJustificationDialog({open: true, client});
-                            }}
-                            className="w-full text-xs border-blue-300 text-blue-700 hover:bg-blue-50"
-                          >
-                            <Shield className="w-3 h-3 mr-1" />
-                            Justifier
-                          </Button>
-                        </div>
-                      )}
-                      
-                      {/* Statut neutralisé */}
-                      {client.justification?.status === 'neutralized' && (
-                        <div className="mt-4 flex items-center justify-between p-2 bg-green-50 rounded-lg border border-green-200">
-                          <div className="flex items-center space-x-2">
-                            <ShieldCheck className="w-4 h-4 text-green-600" />
-                            <span className="text-xs text-green-700">Neutralisé</span>
+                        {/* Actions */}
+                        <div className="mt-6 pt-6 border-t border-gray-100">
+                          <div className="flex items-center justify-between">
+                            <span className="text-sm font-medium text-gray-600">
+                              {client.typeFacturation}
+                            </span>
+                            <div className="flex space-x-2">
+                              {client.justification?.status === 'neutralized' ? (
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  className="text-xs"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleReactivateSuspicion(client);
+                                  }}
+                                >
+                                  Réactiver
+                                </Button>
+                              ) : client.statut === 'suspect' && (
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  className="text-xs"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setJustificationDialog({open: true, client});
+                                  }}
+                                >
+                                  Neutraliser
+                                </Button>
+                              )}
+                            </div>
                           </div>
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleReactivateSuspicion(client);
-                            }}
-                            className="h-6 px-2 text-xs text-green-700 hover:text-green-900"
-                          >
-                            Réactiver
-                          </Button>
+                          
+                          {/* Indicateur "Voir plus" */}
+                          <div className="mt-4 flex items-center justify-center">
+                            <div className="flex items-center space-x-2 text-blue-600 hover:text-blue-700 transition-colors">
+                              <span className="text-sm font-medium">Voir plus d'infos</span>
+                              <ChevronRight className="w-4 h-4" />
+                            </div>
+                          </div>
                         </div>
-                      )}
-                    </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+
+                {/* Pagination */}
+                {totalPages > 1 && (
+                  <div className="flex justify-center space-x-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                      disabled={currentPage === 1}
+                    >
+                      Précédent
+                    </Button>
+                    <span className="flex items-center px-4 text-sm text-gray-600">
+                      Page {currentPage} sur {totalPages}
+                    </span>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                      disabled={currentPage === totalPages}
+                    >
+                      Suivant
+                    </Button>
                   </div>
-                ))}
+                )}
               </div>
             </div>
           </TabsContent>
 
           <TabsContent value="budgets" className="space-y-6">
-            <Card>
-              <CardContent className="p-12 text-center">
-                <FileText className="w-16 h-16 mx-auto mb-4 text-gray-300" />
-                <h3 className="text-lg font-medium text-gray-900 mb-2">Suivi Budgétaire Intelligent</h3>
-                <p className="text-muted-foreground">Module en cours de développement</p>
-              </CardContent>
-            </Card>
+            {/* Budgets complets restaurés */}
+            <div className="space-y-6">
+              {/* En-tête des budgets */}
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-2xl font-bold text-gray-900">Gestion des Budgets</h2>
+                  <p className="text-gray-600">Suivi et analyse des budgets clients</p>
+                </div>
+                <div className="flex space-x-3">
+                  <Select defaultValue="2024">
+                    <SelectTrigger className="w-32">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="2024">2024</SelectItem>
+                      <SelectItem value="2023">2023</SelectItem>
+                      <SelectItem value="2022">2022</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Button>
+                    <FileText className="w-4 h-4 mr-2" />
+                    Exporter
+                  </Button>
+                </div>
+              </div>
+
+              {/* KPIs Budgets */}
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                <Card>
+                  <CardContent className="p-6">
+                    <div className="flex items-center space-x-3">
+                      <div className="p-2 bg-blue-100 rounded-lg">
+                        <Target className="w-6 h-6 text-blue-600" />
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-600">Budget Total</p>
+                        <p className="text-2xl font-bold">2.4M€</p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardContent className="p-6">
+                    <div className="flex items-center space-x-3">
+                      <div className="p-2 bg-green-100 rounded-lg">
+                        <TrendingUp className="w-6 h-6 text-green-600" />
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-600">Réalisé</p>
+                        <p className="text-2xl font-bold">1.8M€</p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardContent className="p-6">
+                    <div className="flex items-center space-x-3">
+                      <div className="p-2 bg-orange-100 rounded-lg">
+                        <Clock className="w-6 h-6 text-orange-600" />
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-600">En cours</p>
+                        <p className="text-2xl font-bold">450K€</p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardContent className="p-6">
+                    <div className="flex items-center space-x-3">
+                      <div className="p-2 bg-red-100 rounded-lg">
+                        <AlertTriangle className="w-6 h-6 text-red-600" />
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-600">À risque</p>
+                        <p className="text-2xl font-bold">150K€</p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Liste des budgets clients */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Budgets par Client</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {analysesFinancieres.slice(0, 10).map((client) => (
+                      <div key={client.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50">
+                        <div className="flex-1">
+                          <h4 className="font-medium">{client.nom}</h4>
+                          <p className="text-sm text-gray-600">{client.gestionnaire}</p>
+                        </div>
+                        <div className="text-right mr-6">
+                          <p className="font-medium">{client.objectifAnnuel.economique.toLocaleString()}€</p>
+                          <p className="text-sm text-gray-600">Budget annuel</p>
+                        </div>
+                        <div className="text-right mr-6">
+                          <p className="font-medium text-green-600">{client.realiseADate.chiffreAffaires.toLocaleString()}€</p>
+                          <p className="text-sm text-gray-600">Réalisé</p>
+                        </div>
+                        <div className="text-right">
+                          <p className="font-medium">{client.realiseADate.pourcentageCA.toFixed(1)}%</p>
+                          <p className="text-sm text-gray-600">Avancement</p>
+                        </div>
+                        <div className="ml-4">
+                          <Badge variant={
+                            client.realiseADate.pourcentageCA >= 90 ? 'default' :
+                            client.realiseADate.pourcentageCA >= 70 ? 'secondary' : 'destructive'
+                          }>
+                            {client.realiseADate.pourcentageCA >= 90 ? 'Excellent' :
+                             client.realiseADate.pourcentageCA >= 70 ? 'Bon' : 'À risque'}
+                          </Badge>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
           </TabsContent>
-
-
         </Tabs>
       </div>
 
-      {/* Sidebar Réalisé par Partner */}
-      {showRealisePartnersSidebar && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex justify-end">
-          <div className="bg-white w-[580px] h-full shadow-2xl overflow-y-auto">
-            <div className="p-8 border-b bg-gradient-to-r from-emerald-50 to-teal-50">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="text-2xl font-bold text-emerald-800">Réalisé Économique par Partner</h3>
-                  <p className="text-base text-emerald-600">Performance 2024</p>
-                </div>
-                <button
-                  onClick={() => setShowRealisePartnersSidebar(false)}
-                  className="p-2 hover:bg-white/50 rounded-lg transition-colors"
-                >
-                  <X className="w-5 h-5 text-emerald-600" />
-                </button>
-              </div>
-            </div>
-
-            <div className="p-8 space-y-6">
-              <div className="p-6 bg-gradient-to-r from-emerald-100 to-teal-100 rounded-xl border border-emerald-200">
-                <div className="text-center">
-                  <p className="text-base font-medium text-emerald-700">Total Réalisé</p>
-                  <p className="text-4xl font-bold text-emerald-800 mt-2">
-                    {(realiseEconomiqueParPartner.total / 1000000).toFixed(2)}M€
-                  </p>
-                </div>
-              </div>
-
-              <div className="space-y-4">
-                {realiseEconomiqueParPartner.partners.map((partner, index) => (
-                  <div key={partner.nom} className="bg-white border border-gray-200 rounded-xl p-6 hover:shadow-md transition-shadow">
-                    <div className="flex items-center justify-between mb-4">
-                      <div className="flex items-center space-x-4">
-                        <div className={`w-12 h-12 rounded-full flex items-center justify-center text-white font-bold text-lg ${
-                          index === 0 ? 'bg-emerald-500' :
-                          index === 1 ? 'bg-blue-500' :
-                          index === 2 ? 'bg-purple-500' :
-                          index === 3 ? 'bg-orange-500' :
-                          index === 4 ? 'bg-pink-500' : 'bg-indigo-500'
-                        }`}>
-                          {partner.nom.substring(0, 2).toUpperCase()}
-                        </div>
-                        <div>
-                          <p className="text-lg font-semibold text-gray-800">{partner.nom}</p>
-                          <p className="text-sm text-gray-500">{partner.pourcentage}% du total</p>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-xl font-bold text-gray-800">{(partner.ca / 1000).toFixed(0)}K€</p>
-                        <div className={`text-sm px-3 py-1 rounded-full font-medium ${
-                          partner.progression >= 98 ? 'bg-green-100 text-green-700' :
-                          partner.progression >= 95 ? 'bg-yellow-100 text-yellow-700' :
-                          'bg-red-100 text-red-700'
-                        }`}>
-                          {partner.progression.toFixed(1)}%
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="space-y-3">
-                      <div className="flex justify-between text-sm">
-                        <span className="text-gray-600">Objectif: {(partner.objectif / 1000).toFixed(0)}K€</span>
-                        <span className="text-gray-600">Écart: {((partner.ca - partner.objectif) / 1000).toFixed(0)}K€</span>
-                      </div>
-                      <div className="w-full bg-gray-200 rounded-full h-2">
-                        <div 
-                          className={`h-2 rounded-full transition-all duration-300 ${
-                            partner.progression >= 98 ? 'bg-green-500' :
-                            partner.progression >= 95 ? 'bg-yellow-500' :
-                            'bg-red-500'
-                          }`}
-                          style={{ width: `${Math.min(partner.progression, 100)}%` }}
-                        />
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Modal de justification */}
-      <Dialog open={justificationDialog.open} onOpenChange={(open) => setJustificationDialog({open})}>
-        <DialogContent className="max-w-md">
+      {/* Dialog de justification */}
+      <Dialog open={justificationDialog.open} onOpenChange={(open) => setJustificationDialog({...justificationDialog, open})}>
+        <DialogContent>
           <DialogHeader>
-            <DialogTitle className="flex items-center space-x-2">
-              <Shield className="w-5 h-5 text-blue-500" />
-              <span>Justifier la Suspicion</span>
-            </DialogTitle>
+            <DialogTitle>Justifier la neutralisation</DialogTitle>
           </DialogHeader>
-          
           <div className="space-y-4">
-            <div>
-              <p className="text-sm text-gray-600 mb-2">
-                Client: <span className="font-medium">{justificationDialog.client?.nom}</span>
-              </p>
-            </div>
-            
-            <div>
-              <Label htmlFor="justification">Justification</Label>
-              <Textarea
-                id="justification"
-                placeholder="Expliquez pourquoi cette suspicion peut être neutralisée..."
-                value={justificationText}
-                onChange={(e) => setJustificationText(e.target.value)}
-                className="mt-1"
-                rows={4}
-              />
-            </div>
-            
+            <Textarea
+              placeholder="Expliquez pourquoi ce client ne doit pas être considéré comme suspect..."
+              value={justificationText}
+              onChange={(e) => setJustificationText(e.target.value)}
+            />
             <div className="flex justify-end space-x-2">
-              <Button
-                variant="outline"
-                onClick={() => setJustificationDialog({open: false})}
-              >
+              <Button variant="outline" onClick={() => setJustificationDialog({open: false, client: null})}>
                 Annuler
               </Button>
-              <Button
-                onClick={() => handleNeutralizeSuspicion(justificationDialog.client)}
-                disabled={!justificationText.trim()}
-                className="bg-blue-500 hover:bg-blue-600"
-              >
-                <ShieldCheck className="w-4 h-4 mr-2" />
+              <Button onClick={() => handleNeutralizeSuspicion(justificationDialog.client)}>
                 Neutraliser
               </Button>
             </div>
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Sidebar pour les partenaires */}
+      <Sheet open={showRealisePartnersSidebar} onOpenChange={setShowRealisePartnersSidebar}>
+        <SheetContent side="right" className="w-[600px] sm:max-w-[600px]">
+          <SheetHeader>
+            <SheetTitle className="flex items-center space-x-2">
+              <Users className="w-5 h-5" />
+              <span>Réalisé Économique par Partenaire</span>
+            </SheetTitle>
+            <SheetDescription>
+              Détail des performances économiques individuelles pour {selectedPeriod}
+            </SheetDescription>
+          </SheetHeader>
+          
+          <div className="mt-6 space-y-6">
+            {/* Résumé global */}
+            <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-600">Total Réalisé</p>
+                  <p className="text-2xl font-bold text-blue-800">{(realiseEconomiqueAnnuel / 1000000).toFixed(2)}M€</p>
+                </div>
+                <div className="text-right">
+                  <p className="text-sm text-gray-600">Objectif</p>
+                  <p className="text-xl font-bold text-purple-800">{(budgetEconomiqueAnnuel / 1000000).toFixed(2)}M€</p>
+                </div>
+              </div>
+              <Progress value={parseFloat(tauxRealisationEconomique)} className="h-3 mt-3" />
+              <p className="text-xs text-center text-gray-600 mt-2">{tauxRealisationEconomique}% de l'objectif atteint</p>
+            </div>
+
+            {/* Détail par partenaire */}
+            <div className="space-y-4">
+              {[
+                { nom: 'Mohamed', realise: 480000, objectif: 640000, evolution: 8.5 },
+                { nom: 'Julien', realise: 410000, objectif: 480000, evolution: 12.3 },
+                { nom: 'Vincent', realise: 395000, objectif: 450000, evolution: -2.1 },
+                { nom: 'Pol', realise: 320000, objectif: 380000, evolution: 15.2 },
+                { nom: 'Ingrid', realise: 485000, objectif: 550000, evolution: 6.8 },
+                { nom: 'Pierre', realise: 360000, objectif: 400000, evolution: -1.5 }
+              ].map((partner, index) => {
+                const tauxRealisation = ((partner.realise / partner.objectif) * 100).toFixed(1);
+                const isGoodPerformance = parseFloat(tauxRealisation) >= 85;
+                const isPositiveEvolution = partner.evolution > 0;
+                
+                return (
+                  <Card key={index} className="border-l-4 border-l-blue-500">
+                    <CardContent className="p-4">
+                      <div className="flex items-center justify-between mb-3">
+                        <div>
+                          <h4 className="font-semibold text-gray-900">{partner.nom}</h4>
+                          <p className="text-sm text-gray-600">Partenaire Senior</p>
+                        </div>
+                        <Badge className={isGoodPerformance ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700'}>
+                          {tauxRealisation}%
+                        </Badge>
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <div className="flex justify-between text-sm">
+                          <span className="text-gray-600">Réalisé:</span>
+                          <span className="font-medium">{(partner.realise / 1000).toFixed(0)}K€</span>
+                        </div>
+                        <div className="flex justify-between text-sm">
+                          <span className="text-gray-600">Objectif:</span>
+                          <span className="font-medium">{(partner.objectif / 1000).toFixed(0)}K€</span>
+                        </div>
+                        <Progress value={parseFloat(tauxRealisation)} className="h-2" />
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs text-gray-500">Évolution vs N-1:</span>
+                          <span className={`text-xs font-medium ${isPositiveEvolution ? 'text-green-600' : 'text-red-600'}`}>
+                            {isPositiveEvolution ? '+' : ''}{partner.evolution}%
+                          </span>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+
+            {/* Actions */}
+            <div className="pt-4 border-t">
+              <div className="flex space-x-3">
+                <Button variant="outline" className="flex-1">
+                  <FileText className="w-4 h-4 mr-2" />
+                  Exporter Détail
+                </Button>
+                <Button className="flex-1">
+                  <BarChart3 className="w-4 h-4 mr-2" />
+                  Analyse Mensuelle
+                </Button>
+              </div>
+            </div>
+          </div>
+        </SheetContent>
+      </Sheet>
+      </div>
     </DashboardLayout>
   );
 };

@@ -7,6 +7,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useNotifications } from '@/contexts/NotificationsContext';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import { PageHeader } from '@/components/layout/PageHeader';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -1012,25 +1013,19 @@ const Croissance = () => {
 
   const renderTabHeader = () => (
           <div className="bg-gradient-to-r from-indigo-50 via-blue-50 to-purple-50 rounded-2xl p-6 border border-blue-200/50 mb-6">
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center space-x-4">
-            <div className="p-3 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl shadow-lg">
-              <TrendingUp className="w-6 h-6 text-white" />
-            </div>
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">Croissance</h1>
-              <p className="text-gray-600">Suivi commercial et développement</p>
-            </div>
-          </div>
-          
-          <div className="flex items-center space-x-3">
-            {/* Filtre Temporel */}
-            <div className="flex items-center space-x-2">
-              <Calendar className="w-4 h-4 text-gray-500" />
-              <Select value={selectedPeriod} onValueChange={(value: any) => setSelectedPeriod(value)}>
-                <SelectTrigger className="w-36 bg-white border-gray-200 shadow-sm">
-                  <SelectValue />
-                </SelectTrigger>
+        <PageHeader
+          title="📈 Croissance"
+          description="Suivi commercial et développement"
+          icon={TrendingUp}
+          actions={
+            <>
+              {/* Filtre Temporel */}
+              <div className="flex items-center space-x-2">
+                <Calendar className="w-4 h-4 text-gray-500" />
+                <Select value={selectedPeriod} onValueChange={(value: any) => setSelectedPeriod(value)}>
+                  <SelectTrigger className="w-36 bg-white border-gray-200 shadow-sm">
+                    <SelectValue />
+                  </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="7d">📅 7 derniers jours</SelectItem>
                   <SelectItem value="30d">📅 30 derniers jours</SelectItem>
@@ -1064,12 +1059,13 @@ const Croissance = () => {
               </>
             )}
 
-            <Button variant="outline" size="sm">
-              <Download className="w-4 h-4 mr-2" />
-              Export
-            </Button>
-          </div>
-        </div>
+              <Button variant="outline" size="sm">
+                <Download className="w-4 h-4 mr-2" />
+                Export
+              </Button>
+            </>
+          }
+        />
 
       {/* Navigation des tabs */}
       <div className="flex flex-wrap gap-2">

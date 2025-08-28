@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Users, Calendar, Clock, TrendingUp, UserCheck, CalendarDays, Activity, Target, MapPin, Phone, Mail, Award, Coffee, Briefcase, CheckCircle, AlertCircle, XCircle, Filter, Search, Plus, Edit, Eye, ChevronLeft, ChevronRight, Gift, MessageSquare, Star, Euro, Send, Upload, Paperclip, Copy, Settings, Zap, Sparkles, BarChart3, FileText } from 'lucide-react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import { PageHeader } from '@/components/layout/PageHeader';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
@@ -605,30 +606,23 @@ const RHModern: React.FC = () => {
   return (
     <DashboardLayout>
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 p-6">
-        {/* Header moderne */}
-        <div className="relative mb-8 p-8 rounded-3xl bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 text-white overflow-hidden">
-          <div className="absolute inset-0 bg-black/10 backdrop-blur-sm"></div>
-          <div className="relative z-10">
-            <div className="flex items-center justify-between mb-4">
-              <div>
-                <h1 className="text-4xl font-bold mb-2">Humain</h1>
-                <p className="text-blue-100 text-lg">Gestion d'équipes et calendrier partagé</p>
+        <PageHeader
+          title="👥 Humain"
+          description="Gestion d'équipes et calendrier partagé"
+          icon={Users}
+          actions={
+            <div className="flex items-center space-x-4">
+              <div className="bg-blue-100 rounded-lg p-3 text-center">
+                <div className="text-2xl font-bold text-blue-900">{teamData.length}</div>
+                <div className="text-sm text-blue-600">Collaborateurs</div>
               </div>
-              <div className="flex items-center space-x-4">
-                <div className="bg-white/20 backdrop-blur-sm rounded-2xl p-4">
-                  <div className="text-2xl font-bold">{teamData.length}</div>
-                  <div className="text-sm text-blue-100">Collaborateurs</div>
-                </div>
-                <div className="bg-white/20 backdrop-blur-sm rounded-2xl p-4">
-                  <div className="text-2xl font-bold">91%</div>
-                  <div className="text-sm text-blue-100">Performance</div>
-                </div>
+              <div className="bg-green-100 rounded-lg p-3 text-center">
+                <div className="text-2xl font-bold text-green-900">91%</div>
+                <div className="text-sm text-green-600">Performance</div>
               </div>
             </div>
-          </div>
-          <div className="absolute -top-40 -right-40 w-80 h-80 bg-white/10 rounded-full blur-3xl"></div>
-          <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-white/10 rounded-full blur-3xl"></div>
-        </div>
+          }
+        />
 
         {/* Navigation des vues */}
         <div className="flex items-center justify-between mb-6">
@@ -2060,3 +2054,4 @@ const RHModern: React.FC = () => {
 };
 
 export default RHModern;
+

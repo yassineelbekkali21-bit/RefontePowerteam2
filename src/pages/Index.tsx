@@ -5,6 +5,7 @@ import {
   TrendingDown, Gauge, MapPin, Plane, Coffee, Home, Sparkles
 } from 'lucide-react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import { PageHeader } from '@/components/layout/PageHeader';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -105,46 +106,11 @@ const Index = () => {
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        {/* Header Powerteam moderne */}
-        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-blue-600 via-purple-600 to-indigo-700 p-8">
-          <div className="absolute inset-0 bg-black/10 backdrop-blur-sm"></div>
-          <div className="absolute top-4 right-4 w-24 h-24 bg-white/10 rounded-full blur-xl animate-pulse"></div>
-          <div className="absolute bottom-4 left-4 w-16 h-16 bg-white/5 rounded-full blur-lg animate-pulse delay-1000"></div>
-          
-          <div className="relative z-10 text-white">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <div className="p-3 bg-white/20 rounded-xl backdrop-blur-sm">
-                  <Sparkles className="h-8 w-8" />
-                </div>
-                <div>
-                  <h1 className="text-4xl font-bold tracking-tight">
-                    Powerteam
-                  </h1>
-                  <p className="text-blue-100 opacity-90">
-                    Bonjour {userName} • {userRole === 'manager' ? 'Manager' : 'Collaborateur'}
-                  </p>
-                </div>
-              </div>
-              
-              <div className="text-right">
-                <div className="text-2xl font-bold">
-                  {new Date().toLocaleDateString('fr-FR', { 
-                    weekday: 'long', 
-                    day: 'numeric', 
-                    month: 'long' 
-                  })}
-                </div>
-                <div className="text-blue-100 text-sm">
-                  Dernière sync: {new Date().toLocaleTimeString('fr-FR', { 
-                    hour: '2-digit', 
-                    minute: '2-digit' 
-                  })}
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+        <PageHeader
+          title="Powerteam"
+          description={`Bonjour ${userName} • ${userRole === 'manager' ? 'Manager' : 'Collaborateur'}`}
+          icon={Sparkles}
+        />
 
         {/* Grille de blocs modulaires */}
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">

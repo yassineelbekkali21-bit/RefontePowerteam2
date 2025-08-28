@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import { PageHeader } from '@/components/layout/PageHeader';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -149,26 +150,22 @@ const AgentIA = () => {
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-              Agent IA Powerteam
-            </h1>
-            <p className="text-muted-foreground mt-1">
-              Point d'entrée transversal • Collaboration • Automatisation • Intelligence contextuelle
-            </p>
-          </div>
-          <div className="flex items-center space-x-3">
-            <Button variant="outline" size="sm">
-              <Settings className="w-4 h-4 mr-2" />
-              Configuration
-            </Button>
-            <Badge className="bg-green-100 text-green-700">
-              ● Agent Actif
-            </Badge>
-          </div>
-        </div>
+        <PageHeader
+          title="🤖 Agent IA Powerteam"
+          description="Point d'entrée transversal • Collaboration • Automatisation • Intelligence contextuelle"
+          icon={Bot}
+          actions={
+            <>
+              <Button variant="outline" size="sm">
+                <Settings className="w-4 h-4 mr-2" />
+                Configuration
+              </Button>
+              <Badge className="bg-green-100 text-green-700">
+                ● Agent Actif
+              </Badge>
+            </>
+          }
+        />
 
         {/* Stats Intelligentes */}
         <div className="grid grid-cols-1 md:grid-cols-5 gap-4">

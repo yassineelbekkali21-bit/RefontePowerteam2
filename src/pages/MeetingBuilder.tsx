@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import { PageHeader } from '@/components/layout/PageHeader';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -40,7 +41,8 @@ import {
   ChevronLeft,
   ChevronRight,
   Maximize,
-  Minimize
+  Minimize,
+  Video
 } from 'lucide-react';
 
 const MeetingBuilder = () => {
@@ -441,26 +443,23 @@ const MeetingBuilder = () => {
     <DashboardLayout>
       <div className="space-y-6">
         {/* Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
-              Meeting Builder
-            </h1>
-            <p className="text-muted-foreground mt-1">
-              Préparation intelligente • Construction sur mesure • Communication alignée
-            </p>
-          </div>
-          <div className="flex items-center space-x-3">
-            <Button variant="outline" size="sm">
-              <Settings className="w-4 h-4 mr-2" />
-              Bibliothèque
-            </Button>
-            <Button>
-              <Plus className="w-4 h-4 mr-2" />
-              Nouvelle Présentation
-            </Button>
-          </div>
-        </div>
+        <PageHeader
+          title="🎥 Meeting Builder"
+          description="Préparation intelligente • Construction sur mesure • Communication alignée"
+          icon={Video}
+          actions={
+            <>
+              <Button variant="outline" size="sm">
+                <Settings className="w-4 h-4 mr-2" />
+                Bibliothèque
+              </Button>
+              <Button>
+                <Plus className="w-4 h-4 mr-2" />
+                Nouvelle Présentation
+              </Button>
+            </>
+          }
+        />
 
         {/* Stats du Builder */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
