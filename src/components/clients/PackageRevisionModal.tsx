@@ -70,6 +70,25 @@ export const PackageRevisionModal: React.FC<PackageRevisionModalProps> = ({ isOp
   const [newServiceName, setNewServiceName] = useState('');
   const [newServiceAmount, setNewServiceAmount] = useState('');
 
+  // Handlers pour les actions
+  const handleCreateProposal = () => {
+    if (revisionDecision === 'increase' && newAmount && Number(newAmount) > currentAmount) {
+      console.log('🎯 Action "optimize" cliquée, fermeture du modal de révision');
+      // Ici vous pouvez ajouter la logique pour créer la proposition
+      // Par exemple : envoyer les données au backend, mettre à jour l'état, etc.
+      alert(`Proposition créée : augmentation de ${currentAmount}€ à ${newAmount}€`);
+      onClose();
+    }
+  };
+
+  const handleConfirmMaintien = () => {
+    if (revisionDecision === 'maintain') {
+      console.log('📋 Confirmation maintien forfait');
+      alert('Forfait maintenu à ' + currentAmount + '€');
+      onClose();
+    }
+  };
+
   const mockRevisionHistory: RevisionHistory[] = [
     { id: '1', date: '15/01/2025', oldAmount: 2200, newAmount: 2500, reason: 'Augmentation volumétrie documents', author: 'Marie Dubois', status: 'Acceptée par le client' as const },
     { id: '2', date: '2022-03-10', oldAmount: 4500, newAmount: 4800, reason: 'Complexité accrue des prestations', author: 'Marie Durand', status: 'APPROVED' as const }
@@ -1031,12 +1050,18 @@ export const PackageRevisionModal: React.FC<PackageRevisionModalProps> = ({ isOp
             Annuler
           </Button>
           {revisionDecision === 'maintain' && (
-            <Button className="bg-blue-600 hover:bg-blue-700">
+            <Button 
+              className="bg-blue-600 hover:bg-blue-700"
+              onClick={handleConfirmMaintien}
+            >
               Confirmer le maintien
             </Button>
           )}
           {revisionDecision === 'increase' && newAmount && Number(newAmount) > currentAmount && (
-            <Button className="bg-green-600 hover:bg-green-700">
+            <Button 
+              className="bg-green-600 hover:bg-green-700"
+              onClick={handleCreateProposal}
+            >
               Créer la proposition ({newAmount}€)
             </Button>
           )}
