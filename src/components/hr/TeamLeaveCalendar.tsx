@@ -219,7 +219,7 @@ const TeamLeaveCalendar: React.FC<TeamLeaveCalendarProps> = ({
             </div>
             <div className="flex items-center space-x-2">
               <div className="w-4 h-4 bg-red-100 rounded"></div>
-              <span className="text-sm">< 40% présence</span>
+              <span className="text-sm">&lt; 40% présence</span>
             </div>
           </div>
         </CardContent>
