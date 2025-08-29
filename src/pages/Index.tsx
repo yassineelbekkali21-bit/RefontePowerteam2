@@ -2,7 +2,7 @@ import {
   BarChart3, TrendingUp, DollarSign, Users, Calendar, Factory, ArrowRight, Clock, 
   Target, Code, CreditCard, Bell, FileText, AlertCircle, CheckCircle, Bot, Video,
   Shield, Briefcase, Zap, Activity, AlertTriangle, CalendarDays, PiggyBank,
-  TrendingDown, Gauge, MapPin, Plane, Coffee, Home, Sparkles
+  TrendingDown, Gauge, MapPin, Plane, Coffee, Home, Sparkles, Eye, BookOpen
 } from 'lucide-react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { PageHeader } from '@/components/layout/PageHeader';
@@ -540,6 +540,51 @@ const Index = () => {
             </div>
           </CardContent>
         </Card>
+
+          {/* Bloc Supervision */}
+          <Card 
+            className="group cursor-pointer hover:shadow-xl transition-all duration-300 hover:scale-[1.02] bg-gradient-to-br from-purple-50 to-indigo-50 border-purple-200"
+            onClick={() => navigate('/supervision')}
+          >
+            <CardHeader className="pb-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-gradient-to-br from-purple-500 to-indigo-500 text-white rounded-lg">
+                    <Eye className="h-5 w-5" />
+                  </div>
+                  <CardTitle className="text-lg bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent">
+                    Supervision
+                  </CardTitle>
+                </div>
+                <ArrowRight className="h-4 w-4 text-gray-400 group-hover:text-purple-600 transition-colors" />
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                <div className="grid grid-cols-2 gap-2 text-center">
+                  <div className="bg-white/70 rounded-lg p-2 border border-purple-100">
+                    <div className="text-lg font-bold text-purple-600">12</div>
+                    <div className="text-xs text-purple-700">Sessions</div>
+                  </div>
+                  <div className="bg-white/70 rounded-lg p-2 border border-purple-100">
+                    <div className="text-lg font-bold text-orange-600">6</div>
+                    <div className="text-xs text-orange-700">Formations IA</div>
+                  </div>
+                </div>
+                <Button 
+                  variant="outline" 
+                  className="w-full border-purple-200 text-purple-700 hover:bg-purple-50"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    navigate('/supervision');
+                  }}
+                >
+                  <BookOpen className="h-4 w-4 mr-2" />
+                  Accéder aux supervisions
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </div>
     </DashboardLayout>

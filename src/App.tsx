@@ -22,6 +22,7 @@ import DataTables from "./pages/DataTables";
 import Notifications from "./pages/Notifications";
 import AgentIA from "./pages/AgentIA";
 import MeetingBuilder from "./pages/MeetingBuilder";
+import Supervision from "./pages/Supervision";
 
 import NotFound from "./pages/NotFound";
 
@@ -48,6 +49,7 @@ const App = () => (
             <Route path="/croissance" element={<Croissance />} />
             <Route path="/agent-ia" element={<AgentIA />} />
             <Route path="/meeting-builder" element={<MeetingBuilder />} />
+            <Route path="/supervision" element={<Supervision />} />
             <Route path="/financial-analysis" element={<FinancialAnalysis />} />
             <Route path="/planning" element={<PlanningModern />} />
             <Route path="/data-tables" element={<DataTables />} />
