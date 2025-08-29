@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { PlansProvider } from "@/contexts/PlansContext";
 import { NotificationsProvider } from "@/contexts/NotificationsContext";
+import { ClientsProvider } from "@/contexts/ClientsContext";
 import Index from "./pages/Index";
 import ClientsModern from "./pages/ClientsModern";
 import ClientDetailPage from "./pages/ClientDetailPage";
@@ -30,7 +31,8 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <PlansProvider>
       <NotificationsProvider>
-        <TooltipProvider>
+        <ClientsProvider>
+          <TooltipProvider>
           <Toaster />
           <Sonner />
           <BrowserRouter>
@@ -54,10 +56,11 @@ const App = () => (
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
-      </TooltipProvider>
-    </NotificationsProvider>
-  </PlansProvider>
-</QueryClientProvider>
+                </TooltipProvider>
+        </ClientsProvider>
+      </NotificationsProvider>
+    </PlansProvider>
+  </QueryClientProvider>
 );
 
 export default App;

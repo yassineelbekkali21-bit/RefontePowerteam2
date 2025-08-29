@@ -6,6 +6,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useNotifications } from '@/contexts/NotificationsContext';
+import { useClients } from '@/contexts/ClientsContext';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -712,6 +713,7 @@ const generateMockData = () => {
 const Croissance = () => {
   const navigate = useNavigate();
   const { addNotification } = useNotifications();
+  const { clientsRisque, updateClientRisque } = useClients();
   const [activeTab, setActiveTab] = useState<'globale' | 'prospects' | 'entrants' | 'suivre' | 'partance' | 'sortants'>('globale');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedStatus, setSelectedStatus] = useState('all');
@@ -3479,7 +3481,8 @@ const Croissance = () => {
   };
 
   const renderClientsASuivre = () => {
-    const clientsASuivre = mockData.suivre;
+    // Utiliser les données du contexte au lieu des données mock
+    const clientsASuivre = clientsRisque;
     
     // Filtrage des clients selon la recherche
     const clientsFiltres = clientsASuivre.filter(client => {
@@ -3490,7 +3493,7 @@ const Croissance = () => {
         client.nom.toLowerCase().includes(query) ||
         client.idClient?.toLowerCase().includes(query) ||
         client.secteur?.toLowerCase().includes(query) ||
-        client.statut.toLowerCase().includes(query)
+        client.statut?.toLowerCase().includes(query)
       );
     });
     
@@ -3498,7 +3501,7 @@ const Croissance = () => {
     const totalClients = clientsASuivre.length;
     const caBudgete = clientsASuivre.reduce((sum, client) => sum + (client.caBudgete || 0), 0);
     const contactsEffectues = clientsASuivre.filter(client => 
-      client.contacts && Object.values(client.contacts).some(contact => contact.status === 'completed')
+      client.dateContact && new Date(client.dateContact) > new Date(Date.now() - 30*24*60*60*1000)
     ).length;
     
     return (
@@ -3643,12 +3646,12 @@ const Croissance = () => {
                         <Badge 
                           variant="outline"
                           className={`text-xs ${
-                            item.statut === 'Client a risque' ? 'bg-red-100 text-red-700 border-red-200' :
-                            item.statut === 'Recupere' ? 'bg-green-100 text-green-700 border-green-200' :
+                            item.statut === 'A risque' ? 'bg-red-100 text-red-700 border-red-200' :
+                            item.statut === 'Récupéré' ? 'bg-green-100 text-green-700 border-green-200' :
                             'bg-gray-100 text-gray-700 border-gray-200'
                           }`}
                         >
-                          {item.statut === 'Recupere' ? 'Récupéré' : item.statut}
+                          {item.statut}
                         </Badge>
                       </td>
                       <td className="p-4">

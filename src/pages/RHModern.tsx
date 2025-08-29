@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { Users, Calendar, Clock, TrendingUp, UserCheck, CalendarDays, Activity, Target, MapPin, Phone, Mail, Award, Coffee, Briefcase, CheckCircle, AlertCircle, XCircle, Filter, Search, Plus, Edit, Eye, ChevronLeft, ChevronRight, Gift, MessageSquare, Star, Euro, Send, Upload, Paperclip, Copy, Settings, Zap, Sparkles, BarChart3, FileText, Clipboard, History } from 'lucide-react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { PageHeader } from '@/components/layout/PageHeader';
+import TeamLeaveCalendar from '@/components/hr/TeamLeaveCalendar';
+import LeaveDecisionHelper from '@/components/hr/LeaveDecisionHelper';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
@@ -514,6 +516,54 @@ const leaveTypes = [
   { id: 'conge-recuperation', name: 'Congé Récupération Annuel', color: 'bg-green-600' }
 ];
 
+// Congés planifiés de l'équipe (données exemple)
+const teamLeaveData = [
+  { 
+    id: 'L1', 
+    employeeName: 'Alice Martin', 
+    employeeId: 1,
+    startDate: '2025-02-15', 
+    endDate: '2025-02-16', 
+    type: 'conge-annuel-paye',
+    typeName: 'Congé Annuel Payé',
+    status: 'approved' as const,
+    color: 'bg-blue-500'
+  },
+  { 
+    id: 'L2', 
+    employeeName: 'Bob Durant', 
+    employeeId: 2,
+    startDate: '2025-02-18', 
+    endDate: '2025-02-22', 
+    type: 'conge-annuel-paye',
+    typeName: 'Congé Annuel Payé',
+    status: 'approved' as const,
+    color: 'bg-blue-500'
+  },
+  { 
+    id: 'L3', 
+    employeeName: 'Claire Dubois', 
+    employeeId: 3,
+    startDate: '2025-02-20', 
+    endDate: '2025-02-21', 
+    type: 'conge-maladie',
+    typeName: 'Congé Maladie',
+    status: 'approved' as const,
+    color: 'bg-red-500'
+  },
+  { 
+    id: 'L4', 
+    employeeName: 'David Rousseau', 
+    employeeId: 4,
+    startDate: '2025-02-25', 
+    endDate: '2025-02-28', 
+    type: 'conge-annuel-paye',
+    typeName: 'Congé Annuel Payé',
+    status: 'pending' as const,
+    color: 'bg-orange-500'
+  }
+];
+
 // Événements annuels avec statuts
 const annualEvents = {
   janvier: [
@@ -552,6 +602,12 @@ const RHModern: React.FC = () => {
   const [selectedDates, setSelectedDates] = useState<number[]>([]);
   const [attachedFile, setAttachedFile] = useState<File | null>(null);
   const [selectedEventFilter, setSelectedEventFilter] = useState<'all' | 'approved' | 'pending' | 'rejected'>('all');
+  
+  // États pour la vue calendrier d'équipe
+  const [showTeamCalendar, setShowTeamCalendar] = useState(false);
+  const [calendarMonth, setCalendarMonth] = useState(new Date());
+  const [showDecisionHelper, setShowDecisionHelper] = useState(false);
+  const [selectedRequestForAnalysis, setSelectedRequestForAnalysis] = useState<any>(null);
   // Demandes de congé d'exemple pour tester le processus
   const [leaveRequests, setLeaveRequests] = useState<any[]>([
     {
@@ -1338,10 +1394,21 @@ const RHModern: React.FC = () => {
             {/* Section Gestion des demandes de congé */}
             <Card className="mt-6">
               <CardHeader>
-                <CardTitle className="flex items-center">
-                  <Clipboard className="w-5 h-5 mr-2" />
-                  Demandes de congé en attente ({leaveRequests.filter(r => r.status === 'pending').length})
-                </CardTitle>
+                <div className="flex items-center justify-between">
+                  <CardTitle className="flex items-center">
+                    <Clipboard className="w-5 h-5 mr-2" />
+                    Demandes de congé en attente ({leaveRequests.filter(r => r.status === 'pending').length})
+                  </CardTitle>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowTeamCalendar(!showTeamCalendar)}
+                    className="text-purple-600 border-purple-200 hover:bg-purple-50"
+                  >
+                    <Calendar className="w-4 h-4 mr-2" />
+                    Vue Équipe
+                  </Button>
+                </div>
               </CardHeader>
               <CardContent>
                   <div className="space-y-4">
@@ -1368,6 +1435,18 @@ const RHModern: React.FC = () => {
                             )}
                           </div>
                           <div className="flex space-x-2">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="border-purple-300 text-purple-600 hover:bg-purple-50"
+                              onClick={() => {
+                                setSelectedRequestForAnalysis(request);
+                                setShowDecisionHelper(true);
+                              }}
+                            >
+                              <Target className="w-4 h-4 mr-1" />
+                              Analyser
+                            </Button>
                             <Button
                               size="sm"
                               className="bg-green-600 hover:bg-green-700"
@@ -1397,17 +1476,29 @@ const RHModern: React.FC = () => {
                       </div>
                     )}
                   </div>
-                </CardContent>
+                                </CardContent>
               </Card>
 
-            {/* Historique des demandes traitées */}
-            <Card className="mt-6">
-              <CardHeader>
-                <CardTitle className="flex items-center">
-                  <History className="w-5 h-5 mr-2" />
-                  Historique des demandes traitées
-                </CardTitle>
-              </CardHeader>
+              {/* Vue Calendrier d'Équipe */}
+              {showTeamCalendar && (
+                <div className="mt-6">
+                  <TeamLeaveCalendar
+                    teamLeaveData={teamLeaveData}
+                    pendingRequests={leaveRequests.filter(r => r.status === 'pending')}
+                    onApprove={handleApproveLeaveRequest}
+                    onReject={handleRejectLeaveRequest}
+                  />
+            </div>
+              )}
+
+              {/* Historique des demandes traitées */}
+              <Card className="mt-6">
+                <CardHeader>
+                  <CardTitle className="flex items-center">
+                    <History className="w-5 h-5 mr-2" />
+                    Historique des demandes traitées
+                  </CardTitle>
+                </CardHeader>
               <CardContent>
                   <div className="space-y-3">
                     {leaveRequests
@@ -2104,7 +2195,7 @@ const RHModern: React.FC = () => {
                       style={{ backgroundColor: getStatusColor(selectedEmployee.status) }}
                     >
                       {selectedEmployee.avatar}
-                    </div>
+      </div>
                     <div>
                       <h2 className="text-2xl font-bold text-gray-900">Gestion des paramètres collaborateur</h2>
                       <p className="text-lg text-gray-600">PROFIL DU COLLABORATEUR : {selectedEmployee.name.toUpperCase()}</p>
@@ -2308,7 +2399,21 @@ const RHModern: React.FC = () => {
             </div>
           </div>
         )}
-      </div>
+              </div>
+        
+        {/* Aide à la décision pour les congés */}
+        {showDecisionHelper && selectedRequestForAnalysis && (
+          <LeaveDecisionHelper
+            request={selectedRequestForAnalysis}
+            teamLeaveData={teamLeaveData}
+            onApprove={handleApproveLeaveRequest}
+            onReject={handleRejectLeaveRequest}
+            onClose={() => {
+              setShowDecisionHelper(false);
+              setSelectedRequestForAnalysis(null);
+            }}
+          />
+        )}
     </DashboardLayout>
   );
 };

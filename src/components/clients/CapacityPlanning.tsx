@@ -155,6 +155,131 @@ const collaborateursMetier: CollaborateurMetier[] = [
   }
 ];
 
+// Nouveaux clients sans gestionnaire attribué
+interface NouveauClient {
+  id: string;
+  nom: string;
+  type: string;
+  budgetHoraire: number; // heures budgétées
+  budgetEconomique: number; // budget en euros
+  datePriseEnCharge: string;
+  urgence: 'haute' | 'moyenne' | 'faible';
+  besoinsSpecifiques: string[];
+  statut: 'nouveau_sans_gestionnaire';
+}
+
+const nouveauxClients: NouveauClient[] = [
+  {
+    id: 'NC-001',
+    nom: 'Dr. Benali Hassan',
+    type: 'Médecin - BNC',
+    budgetHoraire: 120,
+    budgetEconomique: 8500,
+    datePriseEnCharge: '2025-02-01',
+    urgence: 'haute',
+    besoinsSpecifiques: ['TVA', 'Déclarations sociales', 'Bilan comptable'],
+    statut: 'nouveau_sans_gestionnaire'
+  },
+  {
+    id: 'NC-002', 
+    nom: 'Cabinet Dentaire Sourire',
+    type: 'Dentiste - SELARL',
+    budgetHoraire: 95,
+    budgetEconomique: 6800,
+    datePriseEnCharge: '2025-02-03',
+    urgence: 'moyenne',
+    besoinsSpecifiques: ['Comptabilité', 'Social', 'Gestion patrimoine'],
+    statut: 'nouveau_sans_gestionnaire'
+  },
+  {
+    id: 'NC-003',
+    nom: 'Pharmacie Central',
+    type: 'Pharmacie - SARL',
+    budgetHoraire: 150,
+    budgetEconomique: 12000,
+    datePriseEnCharge: '2025-01-28',
+    urgence: 'haute',
+    besoinsSpecifiques: ['Comptabilité complexe', 'Stock valorisation', 'Optimisation fiscale'],
+    statut: 'nouveau_sans_gestionnaire'
+  },
+  {
+    id: 'NC-004',
+    nom: 'Kinésithérapeute Dubois',
+    type: 'Kinésithérapeute - BNC',
+    budgetHoraire: 75,
+    budgetEconomique: 4200,
+    datePriseEnCharge: '2025-02-05',
+    urgence: 'faible',
+    besoinsSpecifiques: ['Déclarations', 'Conseil fiscal'],
+    statut: 'nouveau_sans_gestionnaire'
+  }
+];
+
+// Gestionnaires avec capacité disponible
+interface GestionnaireCapacite {
+  id: string;
+  nom: string;
+  role: string;
+  capaciteHebdomadaire: number; // heures par semaine
+  capaciteUtilisee: number; // pourcentage utilisé
+  capaciteRestante: number; // heures disponibles
+  specialites: string[];
+  nombreClientsActuels: number;
+  chargeMax: number;
+  tauxHoraire: number;
+}
+
+const gestionnairesDisponibles: GestionnaireCapacite[] = [
+  {
+    id: 'G-001',
+    nom: 'Sophie Laurent',
+    role: 'Manager Senior',
+    capaciteHebdomadaire: 35,
+    capaciteUtilisee: 75,
+    capaciteRestante: 8.75, // 25% de 35h
+    specialites: ['Médecins', 'Professions libérales', 'Optimisation fiscale'],
+    nombreClientsActuels: 12,
+    chargeMax: 15,
+    tauxHoraire: 85
+  },
+  {
+    id: 'G-002',
+    nom: 'Pierre Martin',
+    role: 'Comptable Senior',
+    capaciteHebdomadaire: 37,
+    capaciteUtilisee: 65,
+    capaciteRestante: 12.95, // 35% de 37h
+    specialites: ['SELARL', 'Sociétés', 'Consolidation'],
+    nombreClientsActuels: 10,
+    chargeMax: 14,
+    tauxHoraire: 65
+  },
+  {
+    id: 'G-003',
+    nom: 'Marie Durand',
+    role: 'Comptable',
+    capaciteHebdomadaire: 35,
+    capaciteUtilisee: 55,
+    capaciteRestante: 15.75, // 45% de 35h
+    specialites: ['BNC', 'TPE', 'Déclarations courantes'],
+    nombreClientsActuels: 8,
+    chargeMax: 12,
+    tauxHoraire: 45
+  },
+  {
+    id: 'G-004',
+    nom: 'Thomas Petit',
+    role: 'Assistant Comptable',
+    capaciteHebdomadaire: 35,
+    capaciteUtilisee: 45,
+    capaciteRestante: 19.25, // 55% de 35h
+    specialites: ['Saisie comptable', 'Déclarations simples', 'Suivi TPE'],
+    nombreClientsActuels: 6,
+    chargeMax: 10,
+    tauxHoraire: 35
+  }
+];
+
 // Casquettes par dossier client (données métier avec exemples de chaque niveau)
 const casquettesData: CasquetteCollaborateur[] = [
   // Sophie Laurent - OPTIMAL (75-95%) = 85%
@@ -245,11 +370,74 @@ dossiersClients.forEach(dossier => {
 
 export default function CapacityPlanning() {
   const [periodeSelectionnee, setPeriodeSelectionnee] = useState('annuel');
+  const [clientsEnAttente, setClientsEnAttente] = useState<NouveauClient[]>(nouveauxClients);
+  const [attributionEnCours, setAttributionEnCours] = useState<{clientId: string, gestionnaireId: string} | null>(null);
   const [collaborateurFiltre, setCollaborateurFiltre] = useState('all');
   const [vueActive, setVueActive] = useState<'capacites' | 'attribution'>('capacites');
   const [sidebarOuverte, setSidebarOuverte] = useState(false);
   const [collaborateurSelectionne, setCollaborateurSelectionne] = useState<CollaborateurMetier | null>(null);
   const [modalEditionOuverte, setModalEditionOuverte] = useState(false);
+
+  // Fonction pour attribuer un client à un gestionnaire
+  const handleAttribution = (clientId: string, gestionnaireId: string) => {
+    const client = clientsEnAttente.find(c => c.id === clientId);
+    const gestionnaire = gestionnairesDisponibles.find(g => g.id === gestionnaireId);
+    
+    if (client && gestionnaire) {
+      // Vérifier si le gestionnaire a la capacité
+      const heuresNecessairesParSemaine = client.budgetHoraire / 52; // répartition annuelle
+      
+      if (heuresNecessairesParSemaine <= gestionnaire.capaciteRestante) {
+        // Effectuer l'attribution
+        setClientsEnAttente(prev => prev.filter(c => c.id !== clientId));
+        
+        alert(`✅ Attribution réussie !
+
+👤 Client: ${client.nom}
+🏷️ Type: ${client.type}  
+⏰ Budget: ${client.budgetHoraire}h (${heuresNecessairesParSemaine.toFixed(1)}h/semaine)
+💰 Valeur: ${client.budgetEconomique.toLocaleString()}€
+
+👨‍💼 Gestionnaire: ${gestionnaire.nom}
+📊 Capacité restante: ${gestionnaire.capaciteRestante.toFixed(1)}h/semaine
+📧 Notification envoyée automatiquement`);
+      } else {
+        alert(`❌ Attribution impossible !
+
+⚠️ Capacité insuffisante:
+- Nécessaire: ${heuresNecessairesParSemaine.toFixed(1)}h/semaine
+- Disponible: ${gestionnaire.capaciteRestante.toFixed(1)}h/semaine
+
+💡 Suggestion: Choisir un gestionnaire avec plus de capacité disponible`);
+      }
+    }
+  };
+
+  // Fonction pour calculer la compatibilité
+  const getCompatibiliteScore = (client: NouveauClient, gestionnaire: GestionnaireCapacite): number => {
+    let score = 0;
+    
+    // Vérifier les spécialités correspondantes
+    const typeClient = client.type.toLowerCase();
+    const specialitesGestionnaire = gestionnaire.specialites.map(s => s.toLowerCase());
+    
+    if (typeClient.includes('médecin') && specialitesGestionnaire.some(s => s.includes('médecin'))) score += 40;
+    if (typeClient.includes('dentiste') && specialitesGestionnaire.some(s => s.includes('selarl'))) score += 40;
+    if (typeClient.includes('bnc') && specialitesGestionnaire.some(s => s.includes('bnc'))) score += 30;
+    if (typeClient.includes('sarl') && specialitesGestionnaire.some(s => s.includes('sociétés') || s.includes('sarl'))) score += 30;
+    
+    // Capacité disponible
+    const heuresNecessaires = client.budgetHoraire / 52;
+    if (heuresNecessaires <= gestionnaire.capaciteRestante) score += 20;
+    else if (heuresNecessaires <= gestionnaire.capaciteRestante * 1.2) score += 10;
+    
+    // Charge actuelle vs max
+    const ratioCharge = gestionnaire.nombreClientsActuels / gestionnaire.chargeMax;
+    if (ratioCharge < 0.8) score += 10;
+    else if (ratioCharge < 0.9) score += 5;
+    
+    return Math.min(score, 100);
+  };
   const [casquetteEnEdition, setCasquetteEnEdition] = useState<CasquetteCollaborateur | null>(null);
 
   // Analyses métier des capacités
@@ -930,75 +1118,209 @@ export default function CapacityPlanning() {
 
         {/* Onglet Attribution - Simulateur nouveau client */}
         <TabsContent value="attribution" className="space-y-6">
+          {/* Section Nouveaux Clients sans Gestionnaire */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <UserCheck className="w-5 h-5" />
-                Simulateur d'Attribution
+                Nouveaux Clients sans Gestionnaire ({clientsEnAttente.length})
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-6">
-                <div className="p-6 bg-blue-50 rounded-lg">
-                  <h3 className="text-lg font-semibold mb-4">Nouveau Client - Simulation</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                    <div>
-                      <label className="block text-sm font-medium mb-2">Type de client</label>
-                      <Select defaultValue="medecin">
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="medecin">Médecin - BNC</SelectItem>
-                          <SelectItem value="dentiste">Dentiste - SELARL</SelectItem>
-                          <SelectItem value="kine">Kinésithérapeute</SelectItem>
-                          <SelectItem value="production">Production</SelectItem>
-                        </SelectContent>
-                      </Select>
+              <div className="space-y-4">
+                {clientsEnAttente.map((client) => (
+                  <div key={client.id} className="border rounded-lg p-6 bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200">
+                    <div className="flex items-center justify-between mb-4">
+                      <div>
+                        <h3 className="text-lg font-semibold text-gray-900">{client.nom}</h3>
+                        <p className="text-sm text-gray-600">{client.type}</p>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Badge className={
+                          client.urgence === 'haute' ? 'bg-red-100 text-red-700' :
+                          client.urgence === 'moyenne' ? 'bg-orange-100 text-orange-700' :
+                          'bg-green-100 text-green-700'
+                        }>
+                          {client.urgence.toUpperCase()}
+                        </Badge>
+                        <Badge variant="outline">
+                          {client.statut.replace('_', ' ').toUpperCase()}
+                        </Badge>
+                      </div>
                     </div>
-                    <div>
-                      <label className="block text-sm font-medium mb-2">Heures estimées/an</label>
-                      <Select defaultValue="120">
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="60">60h - Petit dossier</SelectItem>
-                          <SelectItem value="120">120h - Dossier moyen</SelectItem>
-                          <SelectItem value="200">200h - Gros dossier</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
 
-                  <div className="space-y-3">
-                    <h4 className="font-medium">Recommandations d'attribution :</h4>
-                    {analysesCapacites.analyses
-                      .filter(a => a.disponibiliteRestante > 100)
-                      .sort((a, b) => b.disponibiliteRestante - a.disponibiliteRestante)
-                      .slice(0, 3)
-                      .map(analyse => (
-                        <div key={analyse.collaborateur.id} className="flex items-center justify-between p-3 bg-white rounded border">
-                          <div className="flex items-center gap-3">
-                            <div 
-                              className="w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-semibold"
-                              style={{ backgroundColor: analyse.collaborateur.couleur }}
-                            >
-                              {analyse.collaborateur.nom.split(' ').map(n => n[0]).join('')}
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+                      <div className="bg-white p-3 rounded-lg">
+                        <p className="text-xs text-gray-600 mb-1">Budget Horaire</p>
+                        <p className="text-lg font-bold text-blue-600">{client.budgetHoraire}h</p>
+                        <p className="text-xs text-gray-500">{(client.budgetHoraire / 52).toFixed(1)}h/semaine</p>
+                      </div>
+                      <div className="bg-white p-3 rounded-lg">
+                        <p className="text-xs text-gray-600 mb-1">Budget Économique</p>
+                        <p className="text-lg font-bold text-green-600">{client.budgetEconomique.toLocaleString()}€</p>
+                      </div>
+                      <div className="bg-white p-3 rounded-lg">
+                        <p className="text-xs text-gray-600 mb-1">Prise en Charge</p>
+                        <p className="text-sm font-medium">{new Date(client.datePriseEnCharge).toLocaleDateString()}</p>
+                      </div>
+                      <div className="bg-white p-3 rounded-lg">
+                        <p className="text-xs text-gray-600 mb-1">Délai restant</p>
+                        <p className="text-sm font-medium text-orange-600">
+                          {Math.ceil((new Date(client.datePriseEnCharge).getTime() - Date.now()) / (1000 * 60 * 60 * 24))} jours
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="mb-4">
+                      <p className="text-sm text-gray-600 mb-2">Besoins spécifiques :</p>
+                      <div className="flex flex-wrap gap-2">
+                        {client.besoinsSpecifiques.map((besoin, index) => (
+                          <Badge key={index} variant="outline" className="text-xs">
+                            {besoin}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Recommandations de gestionnaires */}
+                    <div className="border-t pt-4">
+                      <h4 className="font-medium mb-3">Gestionnaires Recommandés :</h4>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        {gestionnairesDisponibles
+                          .map(gestionnaire => ({
+                            gestionnaire,
+                            score: getCompatibiliteScore(client, gestionnaire)
+                          }))
+                          .sort((a, b) => b.score - a.score)
+                          .slice(0, 4)
+                          .map(({ gestionnaire, score }) => (
+                            <div key={gestionnaire.id} className="bg-white border rounded-lg p-4 hover:shadow-md transition-shadow">
+                              <div className="flex items-center justify-between mb-2">
+                                <div>
+                                  <p className="font-medium text-gray-900">{gestionnaire.nom}</p>
+                                  <p className="text-xs text-gray-600">{gestionnaire.role}</p>
+                                </div>
+                                <div className="text-right">
+                                  <div className={`text-sm font-bold ${
+                                    score >= 80 ? 'text-green-600' :
+                                    score >= 60 ? 'text-orange-600' : 'text-red-600'
+                                  }`}>
+                                    {score}% compatible
+                                  </div>
+                                </div>
+                              </div>
+
+                              <div className="space-y-2 text-xs text-gray-600 mb-3">
+                                <div className="flex justify-between">
+                                  <span>Capacité restante:</span>
+                                  <span className="font-medium">{gestionnaire.capaciteRestante.toFixed(1)}h/semaine</span>
+                                </div>
+                                <div className="flex justify-between">
+                                  <span>Charge actuelle:</span>
+                                  <span className="font-medium">{gestionnaire.nombreClientsActuels}/{gestionnaire.chargeMax} clients</span>
+                                </div>
+                                <div className="flex justify-between">
+                                  <span>Taux horaire:</span>
+                                  <span className="font-medium">{gestionnaire.tauxHoraire}€/h</span>
+                                </div>
+                              </div>
+
+                              <div className="mb-3">
+                                <p className="text-xs text-gray-600 mb-1">Spécialités :</p>
+                                <div className="flex flex-wrap gap-1">
+                                  {gestionnaire.specialites.slice(0, 2).map((spec, idx) => (
+                                    <Badge key={idx} variant="outline" className="text-xs">
+                                      {spec}
+                                    </Badge>
+                                  ))}
+                                </div>
+                              </div>
+
+                              <Button
+                                size="sm"
+                                className="w-full"
+                                onClick={() => handleAttribution(client.id, gestionnaire.id)}
+                                disabled={(client.budgetHoraire / 52) > gestionnaire.capaciteRestante}
+                              >
+                                {(client.budgetHoraire / 52) > gestionnaire.capaciteRestante ? 
+                                  'Capacité insuffisante' : 
+                                  'Attribuer ce client'
+                                }
+                              </Button>
                             </div>
-                            <div>
-                              <p className="font-medium">{analyse.collaborateur.nom}</p>
-                              <p className="text-sm text-gray-600">{analyse.collaborateur.role}</p>
-                            </div>
-                          </div>
-                          <div className="text-right">
-                            <p className="font-medium text-green-600">+{analyse.disponibiliteRestante}h</p>
-                            <p className="text-xs text-gray-500">disponibles</p>
-                          </div>
-                        </div>
-                      ))}
+                          ))}
+                      </div>
+                    </div>
                   </div>
-                </div>
+                ))}
+
+                {clientsEnAttente.length === 0 && (
+                  <div className="text-center py-12 text-gray-500">
+                    <UserCheck className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+                    <p className="text-lg font-medium">Aucun nouveau client en attente</p>
+                    <p className="text-sm">Tous les clients ont été attribués à un gestionnaire</p>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Section Gestionnaires Disponibles */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Users className="w-5 h-5" />
+                Gestionnaires Disponibles
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                {gestionnairesDisponibles.map((gestionnaire) => (
+                  <div key={gestionnaire.id} className="border rounded-lg p-4 bg-gradient-to-br from-gray-50 to-white">
+                    <div className="flex items-center justify-between mb-3">
+                      <div>
+                        <h4 className="font-medium text-gray-900">{gestionnaire.nom}</h4>
+                        <p className="text-xs text-gray-600">{gestionnaire.role}</p>
+                      </div>
+                      <div className={`w-3 h-3 rounded-full ${
+                        gestionnaire.capaciteUtilisee < 70 ? 'bg-green-500' :
+                        gestionnaire.capaciteUtilisee < 85 ? 'bg-orange-500' : 'bg-red-500'
+                      }`}></div>
+                    </div>
+
+                    <div className="space-y-3">
+                      <div>
+                        <div className="flex justify-between text-xs mb-1">
+                          <span>Utilisation</span>
+                          <span>{gestionnaire.capaciteUtilisee}%</span>
+                        </div>
+                        <Progress value={gestionnaire.capaciteUtilisee} className="h-2" />
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-2 text-xs">
+                        <div>
+                          <p className="text-gray-600">Disponible</p>
+                          <p className="font-medium">{gestionnaire.capaciteRestante.toFixed(1)}h/sem</p>
+                        </div>
+                        <div>
+                          <p className="text-gray-600">Clients</p>
+                          <p className="font-medium">{gestionnaire.nombreClientsActuels}/{gestionnaire.chargeMax}</p>
+                        </div>
+                      </div>
+
+                      <div>
+                        <p className="text-xs text-gray-600 mb-1">Spécialités</p>
+                        <div className="flex flex-wrap gap-1">
+                          {gestionnaire.specialites.slice(0, 2).map((spec, idx) => (
+                            <Badge key={idx} variant="outline" className="text-xs">
+                              {spec}
+                            </Badge>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
               </div>
             </CardContent>
           </Card>

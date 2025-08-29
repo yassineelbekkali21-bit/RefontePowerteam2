@@ -1,4 +1,5 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -110,7 +111,7 @@ const mockPrestations: Prestation[] = [
   {
     id: 'P003',
     clientId: 'C003',
-    clientName: 'GARAGE MARTIN',
+    clientName: 'SARL MARTIN',
     collaborateurId: 'U001',
     collaborateurName: 'Sophie Martin',
     categorieId: 'CAT003',
@@ -174,6 +175,40 @@ const mockPrestations: Prestation[] = [
     statut: 'en_attente',
     progression: 20,
     priorite: 'faible'
+  },
+  {
+    id: 'P007',
+    clientId: 'C003',
+    clientName: 'SARL MARTIN',
+    collaborateurId: 'U002',
+    collaborateurName: 'Marc Dupont',
+    categorieId: 'CAT001',
+    categorieName: 'Comptabilité Générale',
+    description: 'Révision comptable Q4',
+    heuresPassees: 15.5,
+    tauxHoraire: 95,
+    montantFacture: 1472.50,
+    dateDebut: '2024-01-28',
+    statut: 'en_cours',
+    progression: 45,
+    priorite: 'normale'
+  },
+  {
+    id: 'P008',
+    clientId: 'C003',
+    clientName: 'SARL MARTIN',
+    collaborateurId: 'U003',
+    collaborateurName: 'Julie Rousseau',
+    categorieId: 'CAT002',
+    categorieName: 'Déclarations Fiscales',
+    description: 'Préparation déclaration annuelle',
+    heuresPassees: 8.0,
+    tauxHoraire: 120,
+    montantFacture: 960,
+    dateDebut: '2024-01-22',
+    statut: 'facture',
+    progression: 100,
+    priorite: 'haute'
   }
 ];
 
@@ -190,15 +225,42 @@ const viewConfigurations: { label: string; config: ViewConfig }[] = [
 const COLORS = ['#8884d8', '#82ca9d', '#ffc658', '#ff7300', '#8dd1e1', '#d084d0'];
 
 const Prestations = () => {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [selectedView, setSelectedView] = useState<ViewConfig>(viewConfigurations[0].config);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatut, setFilterStatut] = useState<string>('all');
   const [filterCollaborateur, setFilterCollaborateur] = useState<string>('all');
   const [filterCategorie, setFilterCategorie] = useState<string>('all');
+  const [filterClient, setFilterClient] = useState<string>('all');
   const [filterTemporel, setFilterTemporel] = useState<string>('annee');
   const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
   const [draggedView, setDraggedView] = useState<number | null>(null);
   const [isCASheetOpen, setIsCASheetOpen] = useState(false);
+
+  // Effet pour gérer les paramètres URL
+  useEffect(() => {
+    const clientParam = searchParams.get('client');
+    if (clientParam) {
+      // Décoder le paramètre URL au cas où il serait encodé
+      const decodedClientParam = decodeURIComponent(clientParam);
+      
+      // Chercher le client exact dans nos données
+      const matchingClient = mockPrestations.find(p => 
+        p.clientName.toLowerCase() === decodedClientParam.toLowerCase() ||
+        p.clientName.toLowerCase().includes(decodedClientParam.toLowerCase()) ||
+        decodedClientParam.toLowerCase().includes(p.clientName.toLowerCase())
+      );
+      
+      if (matchingClient) {
+        setFilterClient(matchingClient.clientName);
+      } else {
+        setFilterClient(decodedClientParam);
+      }
+      
+      // Si un client est spécifié, on peut aussi ajuster la vue pour mettre le client en premier
+      setSelectedView(viewConfigurations[0].config); // Client › Collaborateur › Prestation
+    }
+  }, [searchParams]);
 
   // Calculs des métriques globales (sans euros dans l'affichage principal)
   const metrics = useMemo(() => {
@@ -244,10 +306,14 @@ const Prestations = () => {
       const matchStatut = filterStatut === 'all' || prestation.statut === filterStatut;
       const matchCollaborateur = filterCollaborateur === 'all' || prestation.collaborateurId === filterCollaborateur;
       const matchCategorie = filterCategorie === 'all' || prestation.categorieId === filterCategorie;
+      const matchClient = filterClient === 'all' || 
+        prestation.clientName.toLowerCase() === filterClient.toLowerCase() ||
+        prestation.clientName.toLowerCase().includes(filterClient.toLowerCase()) ||
+        filterClient.toLowerCase().includes(prestation.clientName.toLowerCase());
       
-      return matchSearch && matchStatut && matchCollaborateur && matchCategorie;
+      return matchSearch && matchStatut && matchCollaborateur && matchCategorie && matchClient;
     });
-  }, [searchTerm, filterStatut, filterCollaborateur, filterCategorie]);
+  }, [searchTerm, filterStatut, filterCollaborateur, filterCategorie, filterClient]);
 
   // Organisation des données selon la vue sélectionnée
   const organizedData = useMemo(() => {
@@ -714,9 +780,36 @@ const Prestations = () => {
                   </SelectContent>
                 </Select>
               </div>
+
+              <div className="space-y-2">
+                <label className="text-sm font-medium flex items-center">
+                  <Users className="w-4 h-4 mr-1" />
+                  Client
+                  {searchParams.get('client') && filterClient !== 'all' && (
+                    <Badge variant="outline" className="ml-2 text-xs bg-purple-50 text-purple-700 border-purple-200">
+                      Filtré via lien
+                    </Badge>
+                  )}
+                </label>
+                <Select value={filterClient} onValueChange={setFilterClient}>
+                  <SelectTrigger className={searchParams.get('client') && filterClient !== 'all' ? "border-purple-300 bg-purple-50" : ""}>
+                    <SelectValue placeholder="Tous les clients" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Tous les clients</SelectItem>
+                    <SelectItem value="BELTEC SARL">BELTEC SARL</SelectItem>
+                    <SelectItem value="TECHNO SOLUTIONS">TECHNO SOLUTIONS</SelectItem>
+                    <SelectItem value="SARL MARTIN">SARL MARTIN</SelectItem>
+                    <SelectItem value="RESTAURANT LE GOURMET">RESTAURANT LE GOURMET</SelectItem>
+                    <SelectItem value="COIFFURE STYLE">COIFFURE STYLE</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
           </CardContent>
         </Card>
+
+
 
         {/* Onglets Principaux */}
         <Tabs defaultValue="analysis" className="space-y-6">

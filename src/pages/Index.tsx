@@ -308,8 +308,8 @@ const Index = () => {
                     className="h-3 rounded-full bg-gradient-to-r from-cyan-500 to-blue-500 transition-all duration-500"
                     style={{ width: '87.3%' }}
                   ></div>
-                </div>
-                
+                        </div>
+                        
                 <div className="text-xs text-gray-500">
                   Mise à jour: il y a 2h
                 </div>

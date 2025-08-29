@@ -533,7 +533,7 @@ export const CorrectionPlanModal: React.FC<CorrectionPlanModalProps> = ({ isOpen
                                           <Trash2 className="w-3 h-3" />
                                         </Button>
                                       )}
-                                    </div>
+                                </div>
                                   ) : (
                                     <span className="flex-1">{activity}</span>
                                   )}

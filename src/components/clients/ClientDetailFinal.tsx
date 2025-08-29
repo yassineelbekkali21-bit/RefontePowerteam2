@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -37,7 +38,9 @@ import {
   Edit3,
   Check,
   ExternalLink,
-  X
+  X,
+  Target,
+  Euro
 } from 'lucide-react';
 
 interface Client {
@@ -70,6 +73,7 @@ const ClientDetailFinal: React.FC<ClientDetailFinalProps> = ({
   onPackageRevisionModalOpen,
   initialTab = 'overview'
 }) => {
+  const navigate = useNavigate();
   const { getPlansByClient } = usePlans();
   
   // Récupérer les plans de correction liés à ce client
@@ -77,6 +81,11 @@ const ClientDetailFinal: React.FC<ClientDetailFinalProps> = ({
   const [activeMainTab, setActiveMainTab] = useState<'overview' | 'historique' | 'prestations'>(initialTab);
   const [activeTab, setActiveTab] = useState<'categorie' | 'collaborateur' | 'entite'>('categorie');
   const { toast } = useToast();
+
+  // Fonction pour rediriger vers le module Prestations avec le client comme filtre
+  const handleNavigateToPrestations = () => {
+    navigate(`/prestations?client=${encodeURIComponent(client.name)}`);
+  };
   
   // États pour les priorités des tâches
   const [taskPriorities, setTaskPriorities] = useState<Record<string, 'low' | 'medium' | 'high' | 'critical'>>({
@@ -365,8 +374,8 @@ const ClientDetailFinal: React.FC<ClientDetailFinalProps> = ({
                   <Button 
                     size="sm" 
                     variant="outline" 
-                    className="w-full justify-start text-xs h-8 hover:shadow-sm transition-all duration-200"
-                    onClick={() => setActiveMainTab('historique')}
+                    className="w-full justify-start text-xs h-8 bg-purple-50 hover:bg-purple-100 border-purple-200 text-purple-700 hover:shadow-sm transition-all duration-200"
+                    onClick={handleNavigateToPrestations}
                   >
                     <History className="w-3 h-3 mr-1.5" />
                     Historique
@@ -461,85 +470,122 @@ const ClientDetailFinal: React.FC<ClientDetailFinalProps> = ({
           </Card>
         </div>
 
-        {/* Colonne 2 - Budget horaire + Budget économique + Liste prestations */}
+        {/* Colonne 2 - Analyse Budgétaire Complète + Liste prestations */}
         <div className="col-span-6 space-y-6">
-          {/* Budget Horaire */}
-          <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-0 shadow-lg">
+          {/* Analyse Budgétaire & Rentabilité Complète */}
+          <Card className="bg-gradient-to-br from-slate-50 to-gray-50 border border-gray-200 shadow-xl">
             <CardContent className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="font-semibold text-blue-800">Budget Horaire</h3>
-                {getVarianceIcon(client.budgetHoraire, client.realiseHoraire)}
-              </div>
-              <div className="space-y-2">
-                <div className="flex justify-between text-sm">
-                  <span>Budget: {client.budgetHoraire}h</span>
-                  <span>Réalisé: {client.realiseHoraire}h</span>
-                </div>
-                <Progress value={(client.realiseHoraire / client.budgetHoraire) * 100} className="h-2" />
-                <div className={`text-sm font-medium ${getVarianceColor(client.budgetHoraire, client.realiseHoraire)}`}>
-                  Écart: {client.realiseHoraire - client.budgetHoraire}h
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="font-semibold text-gray-800 flex items-center">
+                  <Euro className="w-5 h-5 mr-2" />
+                  Analyse Budgétaire & Rentabilité
+                </h3>
+                <div className="flex items-center space-x-2">
+                  {getVarianceIcon(client.budgetHoraire, client.realiseHoraire)}
+                  {getVarianceIcon(client.budgetEconomique, client.realiseEconomique)}
                 </div>
               </div>
-            </CardContent>
-          </Card>
+              
+              <div className="space-y-6">
+                {/* Section Budget Horaire */}
+                <div className="bg-white border border-cyan-100 rounded-xl p-5">
+                  <div className="flex items-center mb-4">
+                    <div className="w-8 h-8 bg-cyan-100 rounded-lg flex items-center justify-center mr-3">
+                      <Clock className="w-4 h-4 text-cyan-600" />
+                    </div>
+                    <h4 className="font-semibold text-gray-700">Budget Horaire</h4>
+                  </div>
+                  
+                  <div className="flex justify-between text-sm mb-3">
+                    <span className="text-gray-600">Budget: <span className="font-semibold text-gray-800">{client.budgetHoraire}h</span></span>
+                    <span className="text-gray-600">Réalisé: <span className="font-semibold text-gray-800">{client.realiseHoraire}h</span></span>
+                  </div>
+                  
+                  <Progress value={(client.realiseHoraire / client.budgetHoraire) * 100} className="h-3 mb-3" />
+                  
+                  <div className={`text-sm font-medium text-center px-3 py-2 rounded-lg ${
+                    client.realiseHoraire >= client.budgetHoraire 
+                      ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' 
+                      : 'bg-amber-50 text-amber-700 border border-amber-200'
+                  }`}>
+                    Écart: {client.realiseHoraire - client.budgetHoraire}h
+                  </div>
+                </div>
 
-          {/* Budget Économique */}
-          <Card className="bg-gradient-to-br from-green-50 to-green-100 border-0 shadow-lg">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="font-semibold text-green-800">Budget Économique</h3>
-                {getVarianceIcon(client.budgetEconomique, client.realiseEconomique)}
-              </div>
-              <div className="space-y-4">
-                <div className="flex justify-between text-sm">
-                  <span>Budget: {client.budgetEconomique.toLocaleString()}€</span>
-                  <span>Réalisé: {client.realiseEconomique.toLocaleString()}€</span>
+                {/* Section Budget Économique */}
+                <div className="bg-white border border-blue-100 rounded-xl p-5">
+                  <div className="flex items-center mb-4">
+                    <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center mr-3">
+                      <BarChart3 className="w-4 h-4 text-blue-600" />
                 </div>
-                <Progress value={(client.realiseEconomique / client.budgetEconomique) * 100} className="h-2" />
-                <div className={`text-sm font-medium ${getVarianceColor(client.budgetEconomique, client.realiseEconomique)}`}>
+                    <h4 className="font-semibold text-gray-700">Budget Économique</h4>
+                  </div>
+                  
+                  <div className="flex justify-between text-sm mb-3">
+                    <span className="text-gray-600">Budget: <span className="font-semibold text-gray-800">{client.budgetEconomique.toLocaleString()}€</span></span>
+                    <span className="text-gray-600">Réalisé: <span className="font-semibold text-gray-800">{client.realiseEconomique.toLocaleString()}€</span></span>
+                  </div>
+                  
+                  <Progress value={(client.realiseEconomique / client.budgetEconomique) * 100} className="h-3 mb-3" />
+                  
+                  <div className={`text-sm font-medium text-center px-3 py-2 rounded-lg ${
+                    client.realiseEconomique >= client.budgetEconomique 
+                      ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' 
+                      : 'bg-amber-50 text-amber-700 border border-amber-200'
+                  }`}>
                   Écart: {(client.realiseEconomique - client.budgetEconomique).toLocaleString()}€
+                  </div>
                 </div>
                 
-                {/* Rentabilité Versus */}
-                <div className="mt-4 pt-4 border-t border-green-200">
-                  <div className="flex items-center justify-between mb-3">
-                    <h4 className="text-sm font-semibold text-green-800">Rentabilité (€/h)</h4>
-                    <TrendingUp className="w-4 h-4 text-green-600" />
+                {/* Section Rentabilité */}
+                <div className="bg-white border border-indigo-100 rounded-xl p-5">
+                  <div className="flex items-center mb-4">
+                    <div className="w-8 h-8 bg-indigo-100 rounded-lg flex items-center justify-center mr-3">
+                      <TrendingUp className="w-4 h-4 text-indigo-600" />
                   </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="bg-white/60 rounded-lg p-3">
-                      <div className="text-xs text-gray-600 mb-1">Budgetée</div>
-                      <div className="text-lg font-bold text-green-700">
+                    <h4 className="font-semibold text-gray-700">Rentabilité (€/h)</h4>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-4 mb-4">
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-center">
+                      <div className="text-xs text-blue-600 font-medium mb-1">Budgétée</div>
+                      <div className="text-xl font-bold text-blue-700">
                         {(client.budgetEconomique / client.budgetHoraire).toFixed(0)}€/h
                       </div>
                     </div>
-                    <div className="bg-white/60 rounded-lg p-3">
-                      <div className="text-xs text-gray-600 mb-1">Réalisée</div>
-                      <div className="text-lg font-bold text-green-700">
+                    <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-4 text-center">
+                      <div className="text-xs text-indigo-600 font-medium mb-1">Réalisée</div>
+                      <div className="text-xl font-bold text-indigo-700">
                         {client.realiseHoraire > 0 ? (client.realiseEconomique / client.realiseHoraire).toFixed(0) : '0'}€/h
                       </div>
                     </div>
                   </div>
-                  <div className="mt-3 text-center">
+                  
                     {(() => {
                       const rentabiliteBudgetee = client.budgetEconomique / client.budgetHoraire;
                       const rentabiliteRealisee = client.realiseHoraire > 0 ? client.realiseEconomique / client.realiseHoraire : 0;
                       const ecartRentabilite = rentabiliteRealisee - rentabiliteBudgetee;
                       return (
-                        <div className={`text-sm font-medium ${ecartRentabilite >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                      <div className={`text-sm font-medium text-center px-3 py-2 rounded-lg ${
+                        ecartRentabilite >= 0 
+                          ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' 
+                          : 'bg-orange-50 text-orange-700 border border-orange-200'
+                      }`}>
                           {ecartRentabilite >= 0 ? '+' : ''}{ecartRentabilite.toFixed(0)}€/h vs budget
                         </div>
                       );
                     })()}
                   </div>
-                </div>
                 
-                {/* Facturation Minimum */}
-                <div className="mt-4 pt-4 border-t border-green-200">
-                  <div className="flex items-center justify-between mb-3">
-                    <h4 className="text-sm font-semibold text-green-800">Facturation Minimum</h4>
-                    <AlertTriangle className="w-4 h-4 text-amber-600" />
+                {/* Section Seuil de Rentabilité */}
+                <div className="bg-white border border-purple-100 rounded-xl p-5">
+                  <div className="flex items-center mb-4">
+                    <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center mr-3">
+                      <Target className="w-4 h-4 text-purple-600" />
+                    </div>
+                    <h4 className="font-semibold text-gray-700">Seuil de Rentabilité</h4>
                   </div>
+                  
                   {(() => {
                     const tarifMinimum = 90; // €/heure (seuil de rentabilité configurable)
                     const facturationMinimum = client.realiseHoraire * tarifMinimum;
@@ -547,40 +593,40 @@ const ClientDetailFinal: React.FC<ClientDetailFinalProps> = ({
                     const pourcentageRespect = facturationMinimum > 0 ? (client.realiseEconomique / facturationMinimum) * 100 : 100;
                     
                     return (
-                      <div className="space-y-3">
-                        <div className="bg-white/60 rounded-lg p-3">
+                      <div className="space-y-4">
+                        <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
                           <div className="flex justify-between items-center mb-2">
-                            <span className="text-xs text-gray-600">Minimum requis ({tarifMinimum}€/h)</span>
-                            <span className="text-sm font-bold">€{facturationMinimum.toLocaleString()}</span>
+                            <span className="text-sm text-gray-600">Minimum requis ({tarifMinimum}€/h)</span>
+                            <span className="text-sm font-bold text-gray-800">€{facturationMinimum.toLocaleString()}</span>
                           </div>
                           <div className="flex justify-between items-center">
-                            <span className="text-xs text-gray-600">Facturé actuellement</span>
-                            <span className="text-sm font-bold">€{client.realiseEconomique.toLocaleString()}</span>
+                            <span className="text-sm text-gray-600">Facturé actuellement</span>
+                            <span className="text-sm font-bold text-gray-800">€{client.realiseEconomique.toLocaleString()}</span>
                           </div>
                         </div>
                         
-                        <div className={`flex items-center justify-center px-3 py-2 rounded-lg text-sm font-medium ${
+                        <div className={`flex items-center justify-center px-4 py-3 rounded-lg text-sm font-medium border ${
                           respecteMinimum 
-                            ? 'bg-green-100 text-green-700' 
-                            : 'bg-red-100 text-red-700'
+                            ? 'bg-emerald-50 text-emerald-700 border-emerald-200' 
+                            : 'bg-rose-50 text-rose-700 border-rose-200'
                         }`}>
                           {respecteMinimum ? (
                             <>
                               <CheckCircle className="w-4 h-4 mr-2" />
-                              Seuil de rentabilité respecté ({pourcentageRespect.toFixed(0)}%)
+                              ✅ Seuil respecté ({pourcentageRespect.toFixed(0)}% du minimum)
                             </>
                           ) : (
                             <>
                               <AlertTriangle className="w-4 h-4 mr-2" />
-                              Sous-facturation ({pourcentageRespect.toFixed(0)}% du minimum)
+                              ⚠️ Sous-facturation ({pourcentageRespect.toFixed(0)}% du minimum)
                             </>
                           )}
                         </div>
                         
                         {!respecteMinimum && (
-                          <div className="text-center">
-                            <div className="text-xs text-red-600 mb-1">Manque à facturer</div>
-                            <div className="text-lg font-bold text-red-700">
+                          <div className="bg-rose-50 border border-rose-200 rounded-lg p-4 text-center">
+                            <div className="text-sm text-rose-600 font-medium mb-2">Manque à facturer</div>
+                            <div className="text-2xl font-bold text-rose-700">
                               €{(facturationMinimum - client.realiseEconomique).toLocaleString()}
                             </div>
                           </div>
@@ -1189,7 +1235,7 @@ const ClientDetailFinal: React.FC<ClientDetailFinalProps> = ({
                     <ExternalLink className="w-4 h-4 mr-2" />
                     Voir dans Développement
                   </Button>
-                </div>
+      </div>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">

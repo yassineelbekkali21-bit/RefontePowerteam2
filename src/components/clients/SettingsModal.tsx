@@ -3,6 +3,8 @@ import { Card, CardHeader, CardTitle, CardContent } from '../ui/card';
 import { Button } from '../ui/button';
 import { Badge } from '../ui/badge';
 import { X, User, AlertTriangle, UserMinus, UserX, UserPlus, UserCheck, Save } from 'lucide-react';
+import { useClients } from '@/contexts/ClientsContext';
+import { useToast } from '@/components/ui/use-toast';
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -37,6 +39,8 @@ interface ClientSettings {
 
 
 export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, client }) => {
+  const { addClientRisque, removeClientRisque, getClientRisqueByName } = useClients();
+  const { toast } = useToast();
   const [settings, setSettings] = useState<ClientSettings>({
     statut: client?.statut || 'Nouveau',
     notes: '',
@@ -44,6 +48,66 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, c
   });
 
   if (!isOpen) return null;
+
+  const handleSaveSettings = () => {
+    const previousStatus = client?.statut;
+    const newStatus = settings.statut;
+
+    // Si le statut change vers "A risque", ajouter le client dans le contexte
+    if (newStatus === 'A risque' && previousStatus !== 'A risque') {
+      const clientRisque = {
+        id: client?.id || `R${Date.now()}`,
+        nom: client?.name || 'Client Inconnu',
+        idClient: client?.id || `CLI-${Date.now()}`,
+        statut: 'A risque' as const,
+        secteur: client?.type || 'Non défini',
+        gestionnaire: client?.gestionnaire || 'Non assigné',
+        dateContact: new Date().toLocaleDateString('fr-FR'),
+        rdvDate: null,
+        caBudgete: client?.budgetEconomique || 0,
+        email: client?.email || '',
+        telephone: client?.phone || '',
+        commentaire: settings.contextualData.raisonRisque || 'Statut modifié via paramétrage',
+        raisonRisque: settings.contextualData.raisonRisque || '',
+        planAction: settings.contextualData.planAction || '',
+        dateRecuperation: settings.contextualData.dateRecuperation || '',
+        recupere: false
+      };
+
+      addClientRisque(clientRisque);
+      
+      toast({
+        title: "Client ajouté aux clients à risque",
+        description: `${client?.name} a été ajouté au tableau des clients à risque dans le module Croissance.`,
+        duration: 4000,
+      });
+    }
+
+    // Si le statut change depuis "A risque" vers autre chose, supprimer du contexte
+    if (previousStatus === 'A risque' && newStatus !== 'A risque') {
+      const existingClient = getClientRisqueByName(client?.name || '');
+      if (existingClient) {
+        removeClientRisque(existingClient.id);
+        
+        toast({
+          title: "Client retiré des clients à risque",
+          description: `${client?.name} a été retiré du tableau des clients à risque.`,
+          duration: 4000,
+        });
+      }
+    }
+
+    // Sauvegarder les autres paramètres (ici on pourrait appeler une API)
+    console.log('Paramètres sauvegardés:', { client: client?.name, settings });
+    
+    toast({
+      title: "Paramètres sauvegardés",
+      description: "Les modifications ont été enregistrées avec succès.",
+      duration: 3000,
+    });
+
+    onClose();
+  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -422,10 +486,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, c
           <Button variant="outline" onClick={onClose}>
             Annuler
           </Button>
-          <Button onClick={() => {
-            console.log('Settings saved:', settings);
-            onClose();
-          }} className="bg-blue-500 hover:bg-blue-600">
+          <Button onClick={handleSaveSettings} className="bg-blue-500 hover:bg-blue-600">
             <Save className="w-4 h-4 mr-2" />
             Enregistrer
           </Button>
