@@ -813,7 +813,7 @@ const MeetingBuilder = () => {
                     { module: 'Croissance', slides: 14, icon: Target, color: 'orange' },
                     { module: 'Clients', slides: 2, icon: Users, color: 'blue' },
                     { module: 'Développement', slides: 6, icon: Zap, color: 'indigo' },
-                    { module: 'Agent IA', slides: 2, icon: Bot, color: 'purple' },
+                    { module: 'DEG Assistant', slides: 2, icon: Users, color: 'purple' },
                     { module: 'Notifications', slides: 1, icon: Bell, color: 'red' }
                   ].map((source, index) => (
                     <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">

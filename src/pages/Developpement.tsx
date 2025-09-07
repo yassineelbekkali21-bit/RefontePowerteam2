@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Code, Eye, Users, Calendar, Target, TrendingUp, CheckCircle, AlertTriangle, Clock, Plus, Filter, Search, Settings, GitBranch, FileText, X, Save, Edit, Trash2, User, ArrowRight, Zap, Sparkles, Brain, Wand2, Send } from 'lucide-react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { PageHeader } from '@/components/layout/PageHeader';
@@ -29,6 +30,11 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { useDroppable } from '@dnd-kit/core';
+
+// Import des composants de supervision
+import SupervisionDashboard from '@/components/supervision/SupervisionDashboard';
+import SupervisionSessionModal from '@/components/supervision/SupervisionSessionModal';
+import { SupervisionSession } from '@/types/supervision';
 
 const COLORS = {
   primary: '#4A90E2',
@@ -1294,6 +1300,7 @@ const DroppableColumn: React.FC<DroppableColumnProps> = ({
 
 const Developpement: React.FC = () => {
   const { plans: kanbanPlans, getPlansByStatus, updatePlan, addPlan } = usePlans();
+  const [searchParams, setSearchParams] = useSearchParams();
   
   // Debug : Afficher les plans dans la console
   console.log('🔍 Module Développement - Plans récupérés:', kanbanPlans);
@@ -1306,6 +1313,55 @@ const Developpement: React.FC = () => {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isQuickCreateOpen, setIsQuickCreateOpen] = useState(false);
   const [showClientPlansOnly, setShowClientPlansOnly] = useState(false);
+  
+  // États pour la supervision
+  const [isSessionModalOpen, setIsSessionModalOpen] = useState(false);
+  const [sessionModalMode, setSessionModalMode] = useState<'create' | 'edit' | 'conduct'>('create');
+  const [selectedSession, setSelectedSession] = useState<SupervisionSession | null>(null);
+  const [sessions, setSessions] = useState<SupervisionSession[]>([]);
+
+  // Gestion des paramètres d'URL pour l'onglet actif
+  useEffect(() => {
+    const tab = searchParams.get('tab');
+    if (tab && ['supervision', 'gestion-plans', 'plans-developpement'].includes(tab)) {
+      setActiveTab(tab as 'supervision' | 'gestion-plans' | 'plans-developpement');
+    }
+  }, [searchParams]);
+
+
+
+  // Fonctions de gestion des sessions de supervision
+  const handleCreateSession = () => {
+    setSelectedSession(null);
+    setSessionModalMode('create');
+    setIsSessionModalOpen(true);
+  };
+
+  const handleEditSession = (session: SupervisionSession) => {
+    setSelectedSession(session);
+    setSessionModalMode('edit');
+    setIsSessionModalOpen(true);
+  };
+
+  const handleConductSession = (session: SupervisionSession) => {
+    setSelectedSession(session);
+    setSessionModalMode('conduct');
+    setIsSessionModalOpen(true);
+  };
+
+  const handleSaveSession = (session: SupervisionSession) => {
+    if (selectedSession) {
+      // Mise à jour
+      setSessions(prev => prev.map(s => s.id === session.id ? session : s));
+    } else {
+      // Création
+      setSessions(prev => [...prev, session]);
+    }
+    setIsSessionModalOpen(false);
+    setSelectedSession(null);
+  };
+
+
 
   // Fonction pour filtrer les plans selon l'origine
   const getFilteredPlans = (status: string) => {
@@ -1517,112 +1573,20 @@ const Developpement: React.FC = () => {
         {/* Supervision Tab */}
         {activeTab === 'supervision' && (
           <div className="space-y-6">
-            {/* KPIs de supervision */}
-            <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
-              <Card className="p-4 bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-blue-600">Projets Actifs</p>
-                    <p className="text-2xl font-bold text-blue-700">{supervisionData.activeProjects}</p>
-                  </div>
-                  <Code className="w-8 h-8 text-blue-500" />
-                </div>
-              </Card>
-
-              <Card className="p-4 bg-gradient-to-br from-green-50 to-green-100 border-green-200">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-green-600">Terminés ce mois</p>
-                    <p className="text-2xl font-bold text-green-700">{supervisionData.completedThisMonth}</p>
-                  </div>
-                  <CheckCircle className="w-8 h-8 text-green-500" />
-                </div>
-              </Card>
-
-              <Card className="p-4 bg-gradient-to-br from-red-50 to-red-100 border-red-200">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-red-600">Tâches en retard</p>
-                    <p className="text-2xl font-bold text-red-700">{supervisionData.overdueTasks}</p>
-                  </div>
-                  <AlertTriangle className="w-8 h-8 text-red-500" />
-                </div>
-              </Card>
-
-              <Card className="p-4 bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-purple-600">Productivité</p>
-                    <p className="text-2xl font-bold text-purple-700">{supervisionData.teamProductivity}%</p>
-                  </div>
-                  <TrendingUp className="w-8 h-8 text-purple-500" />
-                </div>
-              </Card>
-
-              <Card className="p-4 bg-gradient-to-br from-indigo-50 to-indigo-100 border-indigo-200">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-indigo-600">Qualité Code</p>
-                    <p className="text-2xl font-bold text-indigo-700">{supervisionData.codeQuality}%</p>
-                  </div>
-                  <Target className="w-8 h-8 text-indigo-500" />
-                </div>
-              </Card>
-
-              <Card className="p-4 bg-gradient-to-br from-orange-50 to-orange-100 border-orange-200">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-orange-600">Bugs signalés</p>
-                    <p className="text-2xl font-bold text-orange-700">{supervisionData.bugReports}</p>
-                  </div>
-                  <AlertTriangle className="w-8 h-8 text-orange-500" />
-                </div>
-              </Card>
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <h2 className="text-2xl font-semibold mb-2">Système de Supervision</h2>
+                <p className="text-gray-600">
+                  Gestion intelligente des supervisions et génération de formations
+                </p>
+              </div>
+              <Button onClick={handleCreateSession} className="bg-blue-600 hover:bg-blue-700">
+                <Plus className="w-4 h-4 mr-2" />
+                Nouvelle Session de Supervision
+              </Button>
             </div>
-
-            {/* Tableau de supervision des projets */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Vue d'ensemble des projets</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {developmentPlans.map((plan) => (
-                    <div key={plan.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50">
-                      <div className="flex items-center space-x-4">
-                        <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-                          <Code className="w-5 h-5 text-blue-600" />
-                        </div>
-                        <div>
-                          <h4 className="font-medium">{plan.title}</h4>
-                          <p className="text-sm text-gray-600">Client: {plan.client}</p>
-                          <p className="text-xs text-gray-500">Assigné à: {plan.assignee}</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center space-x-4">
-                        <div className="text-right">
-                          <Badge className={getPriorityColor(plan.priority)}>
-                            {plan.priority === 'high' ? 'Haute' : plan.priority === 'medium' ? 'Moyenne' : 'Basse'}
-                          </Badge>
-                          <div className="text-sm text-gray-500 mt-1">
-                            {new Date(plan.startDate).toLocaleDateString()} - {new Date(plan.endDate).toLocaleDateString()}
-                          </div>
-                        </div>
-                        <div className="w-24">
-                          <div className="text-xs text-gray-500 mb-1">{plan.progress}%</div>
-                          <Progress value={plan.progress} className="h-2" />
-                        </div>
-                        <Badge className={getStatusColor(plan.status)}>
-                          {plan.status === 'en-cours' ? 'En cours' : 
-                           plan.status === 'planifie' ? 'Planifié' : 
-                           plan.status === 'termine' ? 'Terminé' : 'Suspendu'}
-                        </Badge>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
+            
+            <SupervisionDashboard />
           </div>
         )}
 
@@ -1840,6 +1804,15 @@ const Developpement: React.FC = () => {
           isOpen={isQuickCreateOpen}
           onClose={() => setIsQuickCreateOpen(false)}
           onSave={handleCreateNewPlan}
+        />
+
+        {/* Modal de session de supervision */}
+        <SupervisionSessionModal
+          isOpen={isSessionModalOpen}
+          onClose={() => setIsSessionModalOpen(false)}
+          mode={sessionModalMode}
+          session={selectedSession}
+          onSave={handleSaveSession}
         />
       </div>
     </DashboardLayout>

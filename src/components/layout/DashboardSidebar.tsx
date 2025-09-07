@@ -14,7 +14,11 @@ import {
   TrendingUp,
   Briefcase,
   Bot,
-  Video
+  Video,
+  HelpCircle,
+  Settings,
+  RefreshCw,
+  GitCompareArrows
 } from 'lucide-react';
 import {
   Sidebar,
@@ -82,10 +86,10 @@ import NotificationDropdown from './NotificationDropdown';
       description: "Suivi de la croissance"
     },
     {
-      title: "Agent IA",
+      title: "DEG Assistant",
       url: "/agent-ia",
-      icon: Bot,
-      description: "Assistant intelligent"
+      icon: Users,
+      description: "Support et assistance"
     },
     {
       title: "Meeting Builder",
@@ -93,6 +97,33 @@ import NotificationDropdown from './NotificationDropdown';
       icon: Video,
       description: "Générateur de réunions"
     }
+  ];
+
+  const utilityItems = [
+    {
+      title: "Centre d'Aide",
+      url: "/help",
+      icon: HelpCircle,
+      description: "Guide et documentation"
+    },
+    {
+      title: "Synchronisation",
+      url: "/synchronization",
+      icon: RefreshCw,
+      description: "Gestion des données"
+    },
+    {
+      title: "Paramètres",
+      url: "/settings",
+      icon: Settings,
+      description: "Configuration"
+    },
+    {
+      title: "Basculement V1/V2",
+      url: "/basculement",
+      icon: GitCompareArrows,
+      description: "Comparatif fonctionnalités"
+    },
   ];
 
 export const DashboardSidebar = () => {
@@ -145,6 +176,51 @@ export const DashboardSidebar = () => {
           <SidebarGroupContent>
             <SidebarMenu className="space-y-1">
               {navigationItems.map((item) => {
+                const active = isActive(item.url);
+                return (
+                  <SidebarMenuItem key={item.title}>
+                    <SidebarMenuButton asChild>
+                      <NavLink 
+                        to={item.url}
+                        className={cn(
+                          "flex items-center rounded-lg px-3 py-2 transition-all duration-200",
+                          "hover:bg-accent hover:text-accent-foreground",
+                          active && "bg-primary text-primary-foreground font-medium shadow-sm"
+                        )}
+                        title={collapsed ? item.title : undefined}
+                      >
+                        <item.icon className="h-5 w-5 flex-shrink-0" />
+                        {!collapsed && (
+                          <div className="ml-3 flex-1 min-w-0">
+                            <div className="text-sm font-medium truncate">
+                              {item.title}
+                            </div>
+                            <div className="text-xs text-muted-foreground truncate">
+                              {item.description}
+                            </div>
+                          </div>
+                        )}
+                      </NavLink>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                );
+              })}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        {/* Section Utilitaires */}
+        <SidebarGroup>
+          <SidebarGroupLabel className={cn(
+            "text-xs font-medium text-muted-foreground mb-2 mt-4",
+            collapsed && "sr-only"
+          )}>
+            Utilitaires
+          </SidebarGroupLabel>
+          
+          <SidebarGroupContent>
+            <SidebarMenu className="space-y-1">
+              {utilityItems.map((item) => {
                 const active = isActive(item.url);
                 return (
                   <SidebarMenuItem key={item.title}>

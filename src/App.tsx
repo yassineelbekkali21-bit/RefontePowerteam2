@@ -22,8 +22,12 @@ import DataTables from "./pages/DataTables";
 import Notifications from "./pages/Notifications";
 import AgentIA from "./pages/AgentIA";
 import MeetingBuilder from "./pages/MeetingBuilder";
-import Supervision from "./pages/Supervision";
 
+
+import HelpCenter from "./pages/HelpCenter";
+import Settings from "./pages/Settings";
+import Synchronization from "./pages/Synchronization";
+import BasculementPage from "./pages/BasculementPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -49,11 +53,15 @@ const App = () => (
             <Route path="/croissance" element={<Croissance />} />
             <Route path="/agent-ia" element={<AgentIA />} />
             <Route path="/meeting-builder" element={<MeetingBuilder />} />
-            <Route path="/supervision" element={<Supervision />} />
+
             <Route path="/financial-analysis" element={<FinancialAnalysis />} />
             <Route path="/planning" element={<PlanningModern />} />
             <Route path="/data-tables" element={<DataTables />} />
             <Route path="/notifications" element={<Notifications />} />
+            <Route path="/help" element={<HelpCenter />} />
+            <Route path="/settings" element={<Settings />} />
+            <Route path="/synchronization" element={<Synchronization />} />
+            <Route path="/basculement" element={<BasculementPage />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

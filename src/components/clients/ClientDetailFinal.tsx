@@ -12,6 +12,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { useToast } from '@/components/ui/use-toast';
 import { usePlans } from '@/contexts/PlansContext';
+import ActivityTracker from '../client/ActivityTracker';
 import { 
   ArrowLeft, 
   Settings, 
@@ -61,7 +62,7 @@ interface ClientDetailFinalProps {
   onBudgetModalOpen?: () => void;
   onCorrectionPlanModalOpen?: () => void;
   onPackageRevisionModalOpen?: () => void;
-  initialTab?: 'overview' | 'historique' | 'prestations';
+  initialTab?: 'overview' | 'historique' | 'prestations' | 'activites';
 }
 
 const ClientDetailFinal: React.FC<ClientDetailFinalProps> = ({ 
@@ -78,7 +79,7 @@ const ClientDetailFinal: React.FC<ClientDetailFinalProps> = ({
   
   // Récupérer les plans de correction liés à ce client
   const clientPlans = getPlansByClient(client.name);
-  const [activeMainTab, setActiveMainTab] = useState<'overview' | 'historique' | 'prestations'>(initialTab);
+  const [activeMainTab, setActiveMainTab] = useState<'overview' | 'historique' | 'prestations' | 'activites'>(initialTab);
   const [activeTab, setActiveTab] = useState<'categorie' | 'collaborateur' | 'entite'>('categorie');
   const { toast } = useToast();
 
@@ -214,6 +215,16 @@ const ClientDetailFinal: React.FC<ClientDetailFinalProps> = ({
               }`}
             >
               Prestations détaillées
+            </button>
+            <button
+              onClick={() => setActiveMainTab('activites')}
+              className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
+                activeMainTab === 'activites'
+                  ? 'border-blue-500 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
+            >
+              Activités
             </button>
           </nav>
         </div>
@@ -1434,6 +1445,16 @@ const ClientDetailFinal: React.FC<ClientDetailFinalProps> = ({
               <p className="text-gray-500 text-center py-8">Contenu détaillé des prestations à implémenter</p>
             </CardContent>
           </Card>
+        </div>
+      )}
+
+      {/* Onglet Activités */}
+      {activeMainTab === 'activites' && (
+        <div className="space-y-6">
+          <ActivityTracker 
+            clientId={client.id.toString()} 
+            clientName={client.name} 
+          />
         </div>
       )}
     </div>

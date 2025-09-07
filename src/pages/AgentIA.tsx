@@ -48,7 +48,7 @@ const AgentIA = () => {
     {
       id: 1,
       type: 'ai',
-      content: 'Bonjour ! Je suis votre assistant IA Powerteam. Je peux vous aider avec la communication client, la supervision, l\'automatisation et bien plus. Comment puis-je vous aider aujourd\'hui ?',
+      content: 'Bonjour ! Je suis votre assistant Powerteam. Je peux vous aider avec la communication client, la supervision, l\'automatisation et bien plus. Comment puis-je vous aider aujourd\'hui ?',
       timestamp: new Date().toISOString(),
       actions: []
     }
@@ -80,7 +80,19 @@ const AgentIA = () => {
     let response = "Je comprends votre demande. ";
     let actions = [];
     
-    if (userMessage.toLowerCase().includes('tva') || userMessage.toLowerCase().includes('rappel')) {
+    if (userMessage.toLowerCase().includes('échéance') || userMessage.toLowerCase().includes('urgent') || userMessage.toLowerCase().includes('deadline')) {
+      response = "🚨 Vos échéances urgentes cette semaine :\n\n📋 Déclarations TVA - 3 clients (échéance 20/01)\n📊 Bilan annuel - SAS Durand (échéance 22/01)\n💼 Liasse fiscale - SARL Martin (échéance 25/01)\n\nVoulez-vous que je vous aide à organiser votre planning ?";
+      actions = [
+        { type: 'view-production', label: 'Voir module Production', icon: Calendar },
+        { type: 'planning', label: 'Organiser planning', icon: Clock }
+      ];
+    } else if (userMessage.toLowerCase().includes('planning') || userMessage.toLowerCase().includes('agenda')) {
+      response = "📅 Votre planning aujourd'hui :\n\n• 09h-11h : Révision comptable - Client Dubois\n• 14h-16h : Réunion supervision équipe\n• 16h30-17h30 : Préparation TVA - 3 dossiers\n\nSouhaitez-vous consulter ou modifier votre planning ?";
+      actions = [
+        { type: 'view-calendar', label: 'Voir calendrier complet', icon: Calendar },
+        { type: 'modify-planning', label: 'Modifier créneaux', icon: Clock }
+      ];
+    } else if (userMessage.toLowerCase().includes('tva') || userMessage.toLowerCase().includes('rappel')) {
       response = "Je vais vous aider à envoyer des rappels TVA. J'ai identifié 23 clients assujettis à la TVA avec des échéances ce mois-ci. Voulez-vous que je prépare l'email de rappel ?";
       actions = [
         { type: 'email-tva', label: 'Préparer emails TVA', icon: Mail },
@@ -104,13 +116,19 @@ const AgentIA = () => {
         { type: 'compose-email', label: 'Composer email', icon: Mail },
         { type: 'templates-email', label: 'Modèles emails', icon: FileText }
       ];
+    } else if (userMessage.toLowerCase().includes('équipe') || userMessage.toLowerCase().includes('collaborateur')) {
+      response = "👥 Informations équipe :\n\n• Présents aujourd'hui : 8/10 collaborateurs\n• En congés : Marie (retour lundi), Pierre (retour jeudi)\n• Charge de travail : Équipe à 85% de capacité\n\nQue souhaitez-vous consulter ?";
+      actions = [
+        { type: 'team-planning', label: 'Planning équipe', icon: Users },
+        { type: 'team-performance', label: 'Performances', icon: BarChart3 }
+      ];
     } else {
       response += "Voici ce que je peux faire pour vous aujourd'hui :";
       actions = [
+        { type: 'deadlines', label: 'Échéances urgentes', icon: AlertCircle },
+        { type: 'planning', label: 'Planning du jour', icon: Calendar },
         { type: 'email-assistance', label: 'Gestion emails clients', icon: Mail },
-        { type: 'supervision', label: 'Rapports supervision', icon: FileText },
-        { type: 'automation', label: 'Automatisation tâches', icon: Zap },
-        { type: 'platform-help', label: 'Aide plateforme', icon: Lightbulb }
+        { type: 'supervision', label: 'Rapports supervision', icon: FileText }
       ];
     }
     
@@ -151,9 +169,9 @@ const AgentIA = () => {
     <DashboardLayout>
       <div className="space-y-6">
         <PageHeader
-          title="🤖 Agent IA Powerteam"
-          description="Point d'entrée transversal • Collaboration • Automatisation • Intelligence contextuelle"
-          icon={Bot}
+          title="📋 DEG Assistant"
+          description="Point d'entrée transversal • Collaboration • Automatisation • Support personnalisé"
+          icon={Users}
           actions={
             <>
               <Button variant="outline" size="sm">
@@ -161,7 +179,7 @@ const AgentIA = () => {
                 Configuration
               </Button>
               <Badge className="bg-green-100 text-green-700">
-                ● Agent Actif
+                ● Assistant Actif
               </Badge>
             </>
           }
@@ -269,7 +287,7 @@ const AgentIA = () => {
                   <CardHeader className="bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-t-lg pb-3">
                     <div className="flex items-center justify-between">
                       <CardTitle className="flex items-center space-x-2">
-                        <Bot className="w-5 h-5" />
+                        <MessageSquare className="w-5 h-5" />
                         <span>Assistant Powerteam</span>
                       </CardTitle>
                       <div className="flex items-center space-x-2">
@@ -301,7 +319,7 @@ const AgentIA = () => {
                                 {msg.type === 'user' ? (
                                   <Users className="w-4 h-4 text-white" />
                                 ) : (
-                                  <Bot className="w-4 h-4 text-white" />
+                                  <MessageSquare className="w-4 h-4 text-white" />
                                 )}
                               </div>
                               <div className={`p-4 rounded-lg shadow-sm ${
@@ -518,12 +536,12 @@ const AgentIA = () => {
               </CardContent>
             </Card>
 
-            {/* Suggestions IA */}
+            {/* Suggestions intelligentes */}
             <Card>
               <CardHeader className="pb-3">
                 <CardTitle className="text-sm flex items-center space-x-2">
                   <Lightbulb className="w-4 h-4" />
-                  <span>Suggestions IA</span>
+                  <span>Suggestions</span>
                 </CardTitle>
               </CardHeader>
               <CardContent>

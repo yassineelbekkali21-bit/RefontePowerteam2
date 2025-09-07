@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import { DashboardSidebar } from './DashboardSidebar';
 import { ContextualSidebar } from './ContextualSidebar';
+import FloatingAssistant from '../assistant/FloatingAssistant';
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -61,6 +62,9 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
             onClose={closeContextualSidebar}
           />
         </main>
+
+        {/* DEG Assistant flottant - accessible depuis toutes les pages */}
+        <FloatingAssistant />
       </div>
     </SidebarProvider>
   );

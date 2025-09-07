@@ -478,7 +478,7 @@ const Index = () => {
                     <Bot className="h-5 w-5" />
                   </div>
                   <CardTitle className="text-lg bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
-                    Agent IA
+                    DEG Assistant
                   </CardTitle>
                 </div>
                 <ArrowRight className="h-4 w-4 text-gray-400 group-hover:text-purple-600 transition-colors" />
@@ -544,7 +544,7 @@ const Index = () => {
           {/* Bloc Supervision */}
           <Card 
             className="group cursor-pointer hover:shadow-xl transition-all duration-300 hover:scale-[1.02] bg-gradient-to-br from-purple-50 to-indigo-50 border-purple-200"
-            onClick={() => navigate('/supervision')}
+            onClick={() => navigate('/developpement?tab=supervision')}
           >
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
@@ -576,7 +576,7 @@ const Index = () => {
                   className="w-full border-purple-200 text-purple-700 hover:bg-purple-50"
                   onClick={(e) => {
                     e.stopPropagation();
-                    navigate('/supervision');
+                    navigate('/developpement?tab=supervision');
                   }}
                 >
                   <BookOpen className="h-4 w-4 mr-2" />
